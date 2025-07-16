@@ -74,6 +74,15 @@ RUI.optionsSlash = {
                     end,
                     dialogHidden = true
                 },
+                castbar = {
+                   name = "Cast Bar Scale",
+                   type = 'input',
+				   order = 2,
+                   set = function(info, input)
+						CastingBarFrame:SetScale(tonumber(input) or 1)
+                    end,
+                    dialogHidden = true
+                },  
             }
         },
         default = {
