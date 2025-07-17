@@ -42,6 +42,7 @@ function Module:OnEnable()
     BuffFrameModule      = RUI:GetModule("BuffFrame")
 
     self.editorGridFrame = CreateEditorGridFrame()
+    self.snapToGrid = false  -- Initialize snap-to-grid setting
 end
 
 function Module:OnDisable() end

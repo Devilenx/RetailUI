@@ -1,6 +1,14 @@
 --[[
     Copyright (c) Dmitriy. All rights reserved.
     Licensed under the MIT license. See LICENSE file in the project root for details.
+    
+    Settings Module - Provides a clean, modern in-game settings panel
+    Features:
+    - Scale sliders for all major UI modules (50%-200% range)
+    - Reset to Default button
+    - Open Grid Layout button for /rui edit mode
+    - Snap to Grid checkbox for grid-aligned positioning
+    - Accessible via /rui command or Interface Options
 ]]
 
 local RUI = LibStub('AceAddon-3.0'):GetAddon('RetailUI')
@@ -26,7 +34,15 @@ local moduleConfigs = {
 }
 
 function Module:OnEnable()
-    self:CreateSettingsPanel()
+    -- Delay panel creation to ensure other modules are loaded
+    local frame = CreateFrame("Frame")
+    frame:RegisterEvent("ADDON_LOADED")
+    frame:SetScript("OnEvent", function(self, event, addonName)
+        if addonName == "RetailUI" then
+            Module:CreateSettingsPanel()
+            self:UnregisterEvent("ADDON_LOADED")
+        end
+    end)
 end
 
 function Module:OnDisable() end
@@ -267,10 +283,11 @@ function Module:OpenGridLayout()
 end
 
 function Module:RefreshPanel()
-    -- Recreate the panel to refresh all values
-    if self.settingsPanel then
+    -- Update slider values without recreating the entire panel
+    if self.settingsPanel and self.settingsPanel:IsVisible() then
+        -- Close and reopen the panel to refresh values
         self.settingsPanel:Hide()
-        self:CreateSettingsPanel()
+        self:OpenSettings()
     end
 end
 
