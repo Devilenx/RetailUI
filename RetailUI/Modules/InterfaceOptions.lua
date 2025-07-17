@@ -22,14 +22,14 @@ local scaleSliders = {
     { key = "petFrame", name = "PetFrame Scale", frameRef = "PetFrame" },
     { key = "minimap", name = "Minimap Scale", frameRef = "MinimapCluster" },
     { key = "microMenuBar", name = "MicroMenuBar Scale", frameRef = "MicroButtonAndBagsBar" },
-    { key = "bagsBar", name = "BagsBar Scale", frameRef = "MicroButtonAndBagsBar" },
-    { key = "actionBar1", name = "Action Bar 1 Scale", frameRef = "ActionButton1" },
-    { key = "actionBar2", name = "Action Bar 2 Scale", frameRef = "MultiBarBottomLeftButton1" },
-    { key = "actionBar3", name = "Action Bar 3 Scale", frameRef = "MultiBarBottomRightButton1" },
-    { key = "actionBar4", name = "Action Bar 4 Scale", frameRef = "MultiBarRightButton1" },
-    { key = "actionBar5", name = "Action Bar 5 Scale", frameRef = "MultiBarLeftButton1" },
-    { key = "actionBar6", name = "Action Bar 6 Scale", frameRef = "MultiBarRightButton7" },
-    { key = "actionBar7", name = "Action Bar 7 Scale", frameRef = "MultiBarLeftButton7" }
+    { key = "bagsBar", name = "BagsBar Scale", frameRef = "MainMenuBarBackpackButton" },
+    { key = "actionBar1", name = "Action Bar 1 Scale", frameRef = "MainMenuBar" },
+    { key = "actionBar2", name = "Action Bar 2 Scale", frameRef = "MultiBarBottomLeft" },
+    { key = "actionBar3", name = "Action Bar 3 Scale", frameRef = "MultiBarBottomRight" },
+    { key = "actionBar4", name = "Action Bar 4 Scale", frameRef = "MultiBarRight" },
+    { key = "actionBar5", name = "Action Bar 5 Scale", frameRef = "MultiBarLeft" },
+    { key = "actionBar6", name = "Action Bar 6 Scale", frameRef = "MultiBarRight" },
+    { key = "actionBar7", name = "Action Bar 7 Scale", frameRef = "MultiBarLeft" }
 }
 
 function Module:OnEnable()
@@ -39,16 +39,18 @@ end
 function Module:OnDisable() end
 
 function Module:CreateOptionsPanel()
-    -- Create main options frame with modern styling
+    -- Create main options frame without scaling hacks
     optionsFrame = CreateFrame("Frame", "RetailUISettingsPanel", UIParent)
     optionsFrame.name = "RetailUI Settings"
-    optionsFrame:SetSize(650, 550)
+    optionsFrame:SetSize(600, 500) -- Default panel size without scaling
     optionsFrame:Hide()
 
     -- Modern background
     local bg = optionsFrame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+    -- Use WoW 3.3.5 compatible texture setting
+    bg:SetTexture(0.1, 0.1, 0.1, 0.9)
+    optionsFrame.bg = bg -- Store reference to prevent garbage collection
 
     -- Title with modern styling
     local title = optionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
@@ -62,21 +64,21 @@ function Module:CreateOptionsPanel()
     subtitle:SetText("Adjust UI element scales - changes apply immediately")
     subtitle:SetTextColor(0.8, 0.8, 0.8, 1)
 
-    -- Create scroll frame for all content
-    scrollFrame = CreateFrame("ScrollFrame", "RetailUIScrollFrame", optionsFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 20, -60)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -32, 80)
+    -- Create scroll frame as specified in comment
+    scrollFrame = CreateFrame("ScrollFrame", "RetailUISettingsScroll", optionsFrame, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", optionsFrame, "TOPLEFT", 10, -50)
+    scrollFrame:SetPoint("BOTTOMRIGHT", optionsFrame, "BOTTOMRIGHT", -30, 10)
+    
+    -- Create scroll child content frame
+    scrollChild = CreateFrame("Frame", nil, scrollFrame)
+    scrollChild:SetSize(550, 1000) -- Auto-size later, generous height for all sliders
+    scrollFrame:SetScrollChild(scrollChild)
 
     -- Modern scroll bar styling
     local scrollBar = scrollFrame.ScrollBar or _G[scrollFrame:GetName().."ScrollBar"]
     if scrollBar then
         scrollBar:SetAlpha(0.7)
     end
-
-    -- Create scroll child with padding
-    scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetSize(580, 800) -- Increased height for all sliders
-    scrollFrame:SetScrollChild(scrollChild)
 
     local yOffset = -20
     local sliders = {}
@@ -94,7 +96,7 @@ function Module:CreateOptionsPanel()
     local separator = scrollChild:CreateTexture(nil, "ARTWORK")
     separator:SetPoint("TOPLEFT", 0, yOffset)
     separator:SetSize(560, 2)
-    separator:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+    separator:SetTexture(0.3, 0.3, 0.3, 0.8)
 
     yOffset = yOffset - 40
 
@@ -125,9 +127,15 @@ function Module:CreateOptionsPanel()
         
         -- Modern button styling
         button:SetNormalFontObject("GameFontNormal")
-        button:GetNormalTexture():SetColorTexture(0.2, 0.2, 0.2, 0.8)
-        button:GetHighlightTexture():SetColorTexture(0.3, 0.3, 0.3, 0.8)
-        button:GetPushedTexture():SetColorTexture(0.1, 0.1, 0.1, 0.8)
+        if button:GetNormalTexture() then
+            button:GetNormalTexture():SetTexture(0.2, 0.2, 0.2, 0.8)
+        end
+        if button:GetHighlightTexture() then
+            button:GetHighlightTexture():SetTexture(0.3, 0.3, 0.3, 0.8)
+        end
+        if button:GetPushedTexture() then
+            button:GetPushedTexture():SetTexture(0.1, 0.1, 0.1, 0.8)
+        end
         
         return button
     end
@@ -168,8 +176,10 @@ function Module:CreateScaleSlider(sliderData, yOffset)
     slider:SetValue(1.0)
     slider:SetValueStep(0.05) -- Finer control
     
-    -- Modern slider styling
-    slider:GetThumbTexture():SetColorTexture(1, 0.82, 0, 1) -- Gold thumb
+    -- Modern slider styling  
+    if slider:GetThumbTexture() then
+        slider:GetThumbTexture():SetTexture(1, 0.82, 0, 1) -- Gold thumb
+    end
     
     slider:SetScript("OnValueChanged", function(self, value)
         Module:UpdateFrameScale(sliderData.key, sliderData.frameRef, value)
@@ -245,11 +255,46 @@ function Module:UpdateFrameScale(key, frameRef, scale)
         if MinimapCluster then
             MinimapCluster:SetScale(scale)
         end
-    elseif string.find(key, "actionBar") or key == "microMenuBar" or key == "bagsBar" then
-        -- Handle action bars through widget system
-        local actionBarModule = RUI:GetModule("ActionBar")
-        if actionBarModule and actionBarModule.UpdateWidgets then
-            actionBarModule:UpdateWidgets()
+    elseif key == "microMenuBar" then
+        if MicroButtonAndBagsBar then
+            MicroButtonAndBagsBar:SetScale(scale)
+        end
+    elseif key == "bagsBar" then
+        if MainMenuBarBackpackButton then
+            local bagsFrame = MainMenuBarBackpackButton:GetParent()
+            if bagsFrame then
+                bagsFrame:SetScale(scale)
+            end
+        end
+    elseif key == "actionBar1" then
+        if MainMenuBar then
+            MainMenuBar:SetScale(scale)
+        end
+    elseif key == "actionBar2" then
+        if MultiBarBottomLeft then
+            MultiBarBottomLeft:SetScale(scale)
+        end
+    elseif key == "actionBar3" then
+        if MultiBarBottomRight then
+            MultiBarBottomRight:SetScale(scale)
+        end
+    elseif key == "actionBar4" then
+        if MultiBarRight then
+            MultiBarRight:SetScale(scale)
+        end
+    elseif key == "actionBar5" then
+        if MultiBarLeft then
+            MultiBarLeft:SetScale(scale)
+        end
+    elseif key == "actionBar6" then
+        if MultiBarRight then
+            -- ActionBar6 uses buttons 7-12 of MultiBarRight
+            MultiBarRight:SetScale(scale)
+        end
+    elseif key == "actionBar7" then
+        if MultiBarLeft then
+            -- ActionBar7 uses buttons 7-12 of MultiBarLeft  
+            MultiBarLeft:SetScale(scale)
         end
     end
 end

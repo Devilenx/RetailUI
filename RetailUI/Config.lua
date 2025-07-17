@@ -17,6 +17,7 @@ RUI.optionsSlash = {
             order = 0,
             func = function()
                 InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
+                InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
             end,
             dialogHidden = true
         },
@@ -39,6 +40,7 @@ RUI.optionsSlash = {
             type = 'execute',
             order = 2,
             func = function()
+                InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
                 InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
             end,
             dialogHidden = true
