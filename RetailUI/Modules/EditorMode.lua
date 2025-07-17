@@ -10,6 +10,7 @@ local Module = RUI:NewModule(moduleName, 'AceConsole-3.0', 'AceHook-3.0', 'AceEv
 local UnitFrameModule, CastingBarModule, ActionBarModule, MinimapModule, QuestTrackerModule, BuffFrameModule
 
 Module.editorGridFrame = nil
+Module.snapToGrid = false
 
 local function CreateEditorGridFrame()
     local editorGridFrame = CreateFrame("Frame", 'RUI_EditorGridFrame', UIParent)
@@ -75,4 +76,31 @@ end
 
 function Module:IsShown()
     return self.editorGridFrame:IsShown()
+end
+
+function Module:GetSnapToGrid()
+    return RUI.DB.profile.snapToGrid or false
+end
+
+function Module:SetSnapToGrid(enabled)
+    RUI.DB.profile.snapToGrid = enabled
+    self.snapToGrid = enabled
+end
+
+-- Function to snap a frame to grid if snap-to-grid is enabled
+function Module:SnapFrameToGrid(frame)
+    if not self:GetSnapToGrid() then return end
+    
+    local gridSize = 32 -- Grid size in pixels
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    x = x / scale
+    y = y / scale
+    
+    -- Snap to nearest grid position
+    x = math.floor(x / gridSize + 0.5) * gridSize
+    y = math.floor(y / gridSize + 0.5) * gridSize
+    
+    frame:ClearAllPoints()
+    frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
 end

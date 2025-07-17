@@ -19,3 +19,5 @@ Modules\CastingBar.lua
 Modules\Minimap.lua
 Modules\QuestTracker.lua
 Modules\BuffFrame.lua
+Modules\VehicleUI.lua
+Modules\InterfaceOptions.lua

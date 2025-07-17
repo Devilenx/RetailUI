@@ -41,6 +41,11 @@ function CreateUIFrame(width, height, frameName)
 	end)
 	frame:SetScript("OnDragStop", function(self)
 		self:StopMovingOrSizing()
+		-- Apply snap-to-grid if enabled
+		local EditorMode = RUI:GetModule('EditorMode')
+		if EditorMode and EditorMode:GetSnapToGrid() then
+			EditorMode:SnapFrameToGrid(self)
+		end
 	end)
 
 	frame:SetFrameLevel(100)
