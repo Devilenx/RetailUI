@@ -50,14 +50,41 @@ function Module:CreateSettingsPanel()
     local panel = CreateFrame("Frame", "RetailUISettingsPanel", UIParent)
     panel.name = "RetailUI Settings"
     
+    -- Set up panel appearance for standalone mode (WoW 3.3.5 compatibility)
+    panel:SetSize(400, 500)
+    panel:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 8, right = 8, top = 8, bottom = 8 }
+    })
+    panel:SetBackdropColor(0, 0, 0, 1)
+    panel:EnableMouse(true)
+    panel:SetMovable(true)
+    panel:RegisterForDrag("LeftButton")
+    panel:SetScript("OnDragStart", panel.StartMoving)
+    panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+    panel:Hide() -- Start hidden
+    
+    -- Add a close button for standalone mode (create manually for WoW 3.3.5 compatibility)
+    local closeButton = CreateFrame("Button", nil, panel)
+    closeButton:SetSize(24, 24)
+    closeButton:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -8)
+    closeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+    closeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+    closeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+    closeButton:SetScript("OnClick", function()
+        panel:Hide()
+    end)
+    
     -- Create title
     local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetPoint("TOP", panel, "TOP", 0, -20)
     title:SetText("RetailUI Settings")
     
     -- For WoW 3.3.5 compatibility, create a simple scrollable content frame instead of using templates
     local contentFrame = CreateFrame("Frame", nil, panel)
-    contentFrame:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -20)
+    contentFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -50)
     contentFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
     
     -- Use the content frame directly for positioning elements
@@ -337,9 +364,20 @@ function Module:OpenSettings()
     end
     
     if self.settingsPanel then
-        -- Open Interface Options to the RetailUI Settings category
-        InterfaceOptionsFrame_OpenToCategory(self.settingsPanel)
-        InterfaceOptionsFrame_OpenToCategory(self.settingsPanel) -- Call twice as recommended
+        -- Check if InterfaceOptionsFrame_OpenToCategory exists (it might not in WoW 3.3.5)
+        if InterfaceOptionsFrame_OpenToCategory then
+            -- Open Interface Options to the RetailUI Settings category
+            InterfaceOptionsFrame_OpenToCategory(self.settingsPanel)
+            InterfaceOptionsFrame_OpenToCategory(self.settingsPanel) -- Call twice as recommended
+        else
+            -- Fallback for WoW 3.3.5: Show the panel directly
+            if not self.settingsPanel:IsShown() then
+                self.settingsPanel:Show()
+                self.settingsPanel:SetPoint("CENTER", UIParent, "CENTER")
+            else
+                self.settingsPanel:Hide()
+            end
+        end
     else
         print("RetailUI: Settings panel could not be created")
     end
