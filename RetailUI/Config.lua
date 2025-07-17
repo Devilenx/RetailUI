@@ -10,6 +10,18 @@ RUI.optionsSlash = {
     order = 0,
     type = "group",
     args = {
+        settings = {
+            name = "Open Settings Panel",
+            type = 'execute',
+            order = -1,
+            func = function()
+                local SettingsModule = RUI:GetModule('Settings')
+                if SettingsModule then
+                    SettingsModule:OpenSettings()
+                end
+            end,
+            dialogHidden = true
+        },
         edit = {
             name = "Enable Edit Mode",
             type = 'execute',

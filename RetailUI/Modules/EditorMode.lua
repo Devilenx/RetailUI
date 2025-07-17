@@ -76,3 +76,30 @@ end
 function Module:IsShown()
     return self.editorGridFrame:IsShown()
 end
+
+-- Snap a coordinate to the nearest grid position
+function Module:SnapToGrid(coord, gridSize)
+    gridSize = gridSize or 32
+    return math.floor(coord / gridSize + 0.5) * gridSize
+end
+
+-- Enable or disable snap-to-grid functionality
+function Module:SetSnapToGrid(enabled)
+    self.snapToGrid = enabled
+    
+    -- If we have access to the Settings module, sync the setting
+    local SettingsModule = RUI:GetModule('Settings')
+    if SettingsModule then
+        SettingsModule.snapToGrid = enabled
+    end
+end
+
+-- Check if snap-to-grid is enabled
+function Module:IsSnapToGridEnabled()
+    -- Check Settings module first, fallback to local setting
+    local SettingsModule = RUI:GetModule('Settings')
+    if SettingsModule then
+        return SettingsModule.snapToGrid
+    end
+    return self.snapToGrid or false
+end
