@@ -13,7 +13,7 @@
 
 local RUI = LibStub('AceAddon-3.0'):GetAddon('RetailUI')
 local moduleName = 'Settings'
-local Module = RUI:NewModule(moduleName, 'AceConsole-3.0', 'AceHook-3.0', 'AceEvent-3.0')
+local Module = RUI:NewModule(moduleName, 'AceEvent-3.0')
 
 Module.settingsPanel = nil
 Module.snapToGrid = false
@@ -34,20 +34,18 @@ local moduleConfigs = {
 }
 
 function Module:OnEnable()
-    -- Delay panel creation to ensure other modules are loaded
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("ADDON_LOADED")
-    frame:SetScript("OnEvent", function(self, event, addonName)
-        if addonName == "RetailUI" then
-            Module:CreateSettingsPanel()
-            self:UnregisterEvent("ADDON_LOADED")
-        end
-    end)
+    -- Create settings panel immediately since we're already loading
+    self:CreateSettingsPanel()
 end
 
 function Module:OnDisable() end
 
 function Module:CreateSettingsPanel()
+    if self.settingsPanel then
+        -- Panel already exists
+        return
+    end
+    
     -- Create main panel frame
     local panel = CreateFrame("Frame", "RetailUISettingsPanel", UIParent)
     panel.name = "RetailUI Settings"
@@ -108,8 +106,8 @@ function Module:CreateSettingsPanel()
         Module.snapToGrid = self:GetChecked()
         
         -- Also update the EditorMode module
-        local EditorMode = RUI:GetModule('EditorMode')
-        if EditorMode then
+        local EditorMode = RUI:GetModule('EditorMode', true)  -- true = silent
+        if EditorMode and EditorMode.SetSnapToGrid then
             EditorMode:SetSnapToGrid(Module.snapToGrid)
         end
     end)
@@ -122,7 +120,11 @@ function Module:CreateSettingsPanel()
     self.settingsPanel = panel
     
     -- Register with Interface Options
-    InterfaceOptions_AddCategory(panel)
+    if InterfaceOptions_AddCategory then
+        InterfaceOptions_AddCategory(panel)
+    else
+        print("RetailUI: Interface Options not available")
+    end
 end
 
 function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
@@ -167,6 +169,9 @@ function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
 end
 
 function Module:GetWidgetScale(widgetKey)
+    if not RUI.DB or not RUI.DB.profile or not RUI.DB.profile.widgets then
+        return 1.0
+    end
     if not RUI.DB.profile.widgets[widgetKey] then
         return 1.0
     end
@@ -174,6 +179,17 @@ function Module:GetWidgetScale(widgetKey)
 end
 
 function Module:SetWidgetScale(widgetKey, scale)
+    -- Ensure database is initialized
+    if not RUI.DB or not RUI.DB.profile then
+        print("RetailUI database not initialized")
+        return
+    end
+    
+    -- Ensure widgets table exists
+    if not RUI.DB.profile.widgets then
+        RUI.DB.profile.widgets = {}
+    end
+    
     -- Ensure widget entry exists
     if not RUI.DB.profile.widgets[widgetKey] then
         RUI.DB.profile.widgets[widgetKey] = {}
@@ -292,9 +308,16 @@ function Module:RefreshPanel()
 end
 
 function Module:OpenSettings()
+    if not self.settingsPanel then
+        -- Try to create the panel if it doesn't exist
+        self:CreateSettingsPanel()
+    end
+    
     if self.settingsPanel then
         -- Open Interface Options to the RetailUI Settings category
         InterfaceOptionsFrame_OpenToCategory(self.settingsPanel)
         InterfaceOptionsFrame_OpenToCategory(self.settingsPanel) -- Call twice as recommended
+    else
+        print("RetailUI: Settings panel could not be created")
     end
 end

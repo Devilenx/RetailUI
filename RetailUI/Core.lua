@@ -23,9 +23,11 @@ function RUI:OnInitialize()
 	self:RegisterChatCommand("rui", function(input)
 		if input == "" or input == nil then
 			-- Open settings panel when no arguments provided
-			local SettingsModule = self:GetModule('Settings')
-			if SettingsModule then
+			local SettingsModule = self:GetModule('Settings', true)  -- true = silent, don't error if module doesn't exist
+			if SettingsModule and SettingsModule.OpenSettings then
 				SettingsModule:OpenSettings()
+			else
+				print("RetailUI Settings panel not available. Try /rui edit for grid layout.")
 			end
 		else
 			-- Use the AceConfig chat command handler for other commands
