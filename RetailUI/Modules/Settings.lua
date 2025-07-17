@@ -30,6 +30,7 @@ local moduleConfigs = {
     { key = "actionBar3", name = "Action Bar 3", module = "ActionBar" },
     { key = "actionBar4", name = "Action Bar 4", module = "ActionBar" },
     { key = "actionBar5", name = "Action Bar 5", module = "ActionBar" },
+    { key = "actionBar6", name = "Action Bar 6", module = "ActionBar" },
     { key = "actionBar7", name = "Action Bar 7 (Shapeshift)", module = "ActionBar" }
 }
 
@@ -82,13 +83,44 @@ function Module:CreateSettingsPanel()
     title:SetPoint("TOP", panel, "TOP", 0, -20)
     title:SetText("RetailUI Settings")
     
-    -- For WoW 3.3.5 compatibility, create a simple scrollable content frame instead of using templates
-    local contentFrame = CreateFrame("Frame", nil, panel)
-    contentFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -50)
-    contentFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
+    -- Create ScrollFrame with proper scrollbar
+    local scrollFrame = CreateFrame("ScrollFrame", nil, panel)
+    scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -50)
+    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
     
-    -- Use the content frame directly for positioning elements
-    local scrollChild = contentFrame
+    -- Create scroll content frame
+    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+    scrollChild:SetSize(360, 1000) -- Set a large height to accommodate all content
+    scrollFrame:SetScrollChild(scrollChild)
+    
+    -- Create a vertical scrollbar
+    local scrollBar = CreateFrame("Slider", nil, scrollFrame)
+    scrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+    scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+    scrollBar:SetWidth(16)
+    scrollBar:SetMinMaxValues(0, 100)
+    scrollBar:SetValueStep(1)
+    scrollBar:SetValue(0)
+    scrollBar:SetOrientation("VERTICAL")
+    
+    -- Set up scrollbar textures
+    scrollBar:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
+    local thumb = scrollBar:GetThumbTexture()
+    thumb:SetSize(16, 24)
+    thumb:SetTexCoord(0.20, 0.80, 0.125, 0.875)
+    
+    scrollBar:SetScript("OnValueChanged", function(self, value)
+        local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
+        scrollFrame:SetVerticalScroll(value / 100 * maxScroll)
+    end)
+    
+    -- Enable mouse wheel scrolling
+    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+        local newValue = scrollBar:GetValue() - (delta * 5)
+        newValue = math.max(0, math.min(100, newValue))
+        scrollBar:SetValue(newValue)
+    end)
+    scrollFrame:EnableMouseWheel(true)
     
     -- Variables for positioning
     local yOffset = -20
@@ -159,6 +191,9 @@ function Module:CreateSettingsPanel()
     
     yOffset = yOffset - 30
     
+    -- Update scroll child height based on content
+    scrollChild:SetHeight(math.abs(yOffset) + 50)
+    
     self.settingsPanel = panel
     
     -- Register with Interface Options
@@ -170,24 +205,38 @@ function Module:CreateSettingsPanel()
 end
 
 function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
-    -- Create slider frame without template for WoW 3.3.5 compatibility
-    local slider = CreateFrame("Slider", nil, parent)
+    -- Try to create slider with OptionsSliderTemplate for WoW 3.3.5 compatibility
+    local slider
+    if pcall(function() 
+        slider = CreateFrame("Slider", nil, parent, "OptionsSliderTemplate")
+    end) then
+        -- Template worked, configure it
+        slider:SetOrientation("HORIZONTAL")
+    else
+        -- Fallback to manual creation
+        slider = CreateFrame("Slider", nil, parent)
+        
+        -- Create slider textures manually
+        local thumb = slider:CreateTexture(nil, "OVERLAY")
+        thumb:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+        thumb:SetSize(32, 32)
+        slider:SetThumbTexture(thumb)
+        
+        -- Background texture
+        local bg = slider:CreateTexture(nil, "BACKGROUND")
+        bg:SetTexture("Interface\\Buttons\\UI-SliderBar-Background")
+        bg:SetAllPoints(slider)
+    end
+    
     slider:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, yOffset)
     slider:SetSize(200, 16)
     slider:SetMinMaxValues(0.5, 2.0)
     slider:SetValueStep(0.05)
-    -- Note: SetObeyStepOnDrag doesn't exist in WoW 3.3.5
     
-    -- Create slider textures manually since we're not using templates
-    local thumb = slider:CreateTexture(nil, "OVERLAY")
-    thumb:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-    thumb:SetSize(32, 32)
-    slider:SetThumbTexture(thumb)
-    
-    -- Simplified background for WoW 3.3.5 compatibility
-    local bg = slider:CreateTexture(nil, "BACKGROUND")
-    bg:SetTexture("Interface\\Buttons\\UI-SliderBar-Background")
-    bg:SetAllPoints(slider)
+    -- Ensure horizontal orientation
+    if slider.SetOrientation then
+        slider:SetOrientation("HORIZONTAL")
+    end
     
     -- Get current scale value or default to 1.0
     local currentScale = self:GetWidgetScale(widgetKey) or 1.0
@@ -274,23 +323,62 @@ function Module:UpdateModuleScale(widgetKey, scale)
             TargetFrame:SetScale(scale)
         end
     elseif widgetKey == "targetOfTarget" then
+        -- Handle TargetOfTarget frame - check different possible names for WoW 3.3.5
         if TargetFrameToT then
             TargetFrameToT:SetScale(scale)
+        elseif _G["TargetofTargetFrame"] then
+            _G["TargetofTargetFrame"]:SetScale(scale)
+        elseif _G["TargetofTarget"] then
+            _G["TargetofTarget"]:SetScale(scale)
         end
     elseif string.find(widgetKey, "actionBar") then
-        -- Handle action bars
-        local ActionBarModule = RUI:GetModule("ActionBar")
-        if ActionBarModule and ActionBarModule.actionBars then
-            local barNumber = tonumber(string.match(widgetKey, "actionBar(%d+)"))
-            if barNumber and ActionBarModule.actionBars[barNumber] then
-                ActionBarModule.actionBars[barNumber]:SetScale(scale)
+        -- Handle action bars with direct frame scaling
+        local barNumber = tonumber(string.match(widgetKey, "actionBar(%d+)"))
+        if barNumber then
+            if barNumber == 1 then
+                -- Main Action Bar
+                if MainMenuBar then
+                    MainMenuBar:SetScale(scale)
+                end
+            elseif barNumber == 2 then
+                -- Bottom Left Action Bar 
+                if MultiBarBottomLeft then
+                    MultiBarBottomLeft:SetScale(scale)
+                end
+            elseif barNumber == 3 then
+                -- Bottom Right Action Bar
+                if MultiBarBottomRight then
+                    MultiBarBottomRight:SetScale(scale)
+                end
+            elseif barNumber == 4 then
+                -- Left Action Bar
+                if MultiBarLeft then
+                    MultiBarLeft:SetScale(scale)
+                end
+            elseif barNumber == 5 then
+                -- Right Action Bar
+                if MultiBarRight then
+                    MultiBarRight:SetScale(scale)
+                end
+            elseif barNumber == 6 then
+                -- Bonus Action Bar (if available)
+                if BonusActionBarFrame then
+                    BonusActionBarFrame:SetScale(scale)
+                end
+            elseif barNumber == 7 then
+                -- Shapeshift/Stance Bar
+                if ShapeshiftBarFrame then
+                    ShapeshiftBarFrame:SetScale(scale)
+                elseif StanceBarFrame then
+                    StanceBarFrame:SetScale(scale)
+                end
             end
         end
     end
     
     -- Also try to call the existing UnitFrame module update if it's a unit frame
     if widgetKey == "player" or widgetKey == "target" or widgetKey == "targetOfTarget" then
-        local UnitFrameModule = RUI:GetModule("UnitFrame")
+        local UnitFrameModule = RUI:GetModule("UnitFrame", true) -- true = silent
         if UnitFrameModule and UnitFrameModule.UpdateWidgets then
             UnitFrameModule:UpdateWidgets()
         end

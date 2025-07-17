@@ -84,6 +84,31 @@ function Module:SnapToGrid(coord, gridSize)
     return math.floor(coord / gridSize + 0.5) * gridSize
 end
 
+-- Snap a frame to grid using its own dimensions to prevent overlap
+function Module:SnapFrameToGrid(frame)
+    if not frame or not self:IsSnapToGridEnabled() then
+        return
+    end
+    
+    local w, h = frame:GetSize()
+    if w == 0 or h == 0 then
+        -- Fallback to default grid size if frame has no size
+        w, h = 32, 32
+    end
+    
+    local x, y = frame:GetLeft(), frame:GetTop()
+    if not x or not y then
+        return -- Frame position not available
+    end
+    
+    -- Snap to grid using frame dimensions as grid size
+    local snappedX = math.floor(x / w + 0.5) * w
+    local snappedY = math.floor(y / h + 0.5) * h
+    
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", snappedX, -snappedY)
+end
+
 -- Enable or disable snap-to-grid functionality
 function Module:SetSnapToGrid(enabled)
     self.snapToGrid = enabled

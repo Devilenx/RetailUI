@@ -61,13 +61,7 @@ function CreateUIFrame(width, height, frameName)
 		-- Apply snap-to-grid if enabled and in editor mode
 		local EditorMode = RUI:GetModule('EditorMode')
 		if EditorMode and EditorMode:IsShown() and EditorMode:IsSnapToGridEnabled() then
-			local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
-			if point and xOfs and yOfs then
-				local snappedX = EditorMode:SnapToGrid(xOfs)
-				local snappedY = EditorMode:SnapToGrid(yOfs)
-				self:ClearAllPoints()
-				self:SetPoint(point, relativeTo, relativePoint, snappedX, snappedY)
-			end
+			EditorMode:SnapFrameToGrid(self)
 		end
 	end)
 
