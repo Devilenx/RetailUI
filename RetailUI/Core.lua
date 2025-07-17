@@ -18,6 +18,22 @@ RUI.DB = nil
 function RUI:OnInitialize()
 	RUI.DB = AceDB:New("RetailUIDB", RUI.default, true)
 	AceConfig:RegisterOptionsTable("RUI Commands", RUI.optionsSlash, "rui")
+	
+	-- Add a default slash command handler to open settings panel
+	self:RegisterChatCommand("rui", function(input)
+		if input == "" or input == nil then
+			-- Open settings panel when no arguments provided
+			local SettingsModule = self:GetModule('Settings', true)  -- true = silent, don't error if module doesn't exist
+			if SettingsModule and SettingsModule.OpenSettings then
+				SettingsModule:OpenSettings()
+			else
+				print("RetailUI Settings panel not available. Try /rui edit for grid layout.")
+			end
+		else
+			-- Use the AceConfig chat command handler for other commands
+			LibStub("AceConfigCmd-3.0"):HandleCommand("rui", "RUI Commands", input)
+		end
+	end)
 end
 
 function RUI:OnEnable()
@@ -41,6 +57,12 @@ function CreateUIFrame(width, height, frameName)
 	end)
 	frame:SetScript("OnDragStop", function(self)
 		self:StopMovingOrSizing()
+		
+		-- Apply snap-to-grid if enabled and in editor mode
+		local EditorMode = RUI:GetModule('EditorMode')
+		if EditorMode and EditorMode:IsShown() and EditorMode:IsSnapToGridEnabled() then
+			EditorMode:SnapFrameToGrid(self)
+		end
 	end)
 
 	frame:SetFrameLevel(100)

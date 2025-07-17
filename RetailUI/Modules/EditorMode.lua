@@ -42,6 +42,7 @@ function Module:OnEnable()
     BuffFrameModule      = RUI:GetModule("BuffFrame")
 
     self.editorGridFrame = CreateEditorGridFrame()
+    self.snapToGrid = false  -- Initialize snap-to-grid setting
 end
 
 function Module:OnDisable() end
@@ -75,4 +76,61 @@ end
 
 function Module:IsShown()
     return self.editorGridFrame:IsShown()
+end
+
+-- Snap a coordinate to the nearest grid position
+function Module:SnapToGrid(coord, gridSize)
+    gridSize = gridSize or 32
+    return math.floor(coord / gridSize + 0.5) * gridSize
+end
+
+-- Snap a frame to grid using its own dimensions to prevent overlap
+function Module:SnapFrameToGrid(frame)
+    if not frame or not self:IsSnapToGridEnabled() then
+        return
+    end
+    
+    local x, y = frame:GetLeft(), frame:GetTop()
+    if not x or not y then
+        return -- Frame position not available
+    end
+    
+    -- Use fixed 32px grid size for consistent snapping
+    local gridSize = 32
+    local parent = UIParent
+    
+    -- Calculate position relative to parent
+    local parentLeft = parent:GetLeft() or 0
+    local parentTop = parent:GetTop() or UIParent:GetHeight()
+    
+    local relativeX = x - parentLeft
+    local relativeY = parentTop - y
+    
+    -- Snap to grid
+    local snappedX = math.floor(relativeX / gridSize + 0.5) * gridSize
+    local snappedY = math.floor(relativeY / gridSize + 0.5) * gridSize
+    
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", snappedX, -snappedY)
+end
+
+-- Enable or disable snap-to-grid functionality
+function Module:SetSnapToGrid(enabled)
+    self.snapToGrid = enabled
+    
+    -- If we have access to the Settings module, sync the setting
+    local SettingsModule = RUI:GetModule('Settings')
+    if SettingsModule then
+        SettingsModule.snapToGrid = enabled
+    end
+end
+
+-- Check if snap-to-grid is enabled
+function Module:IsSnapToGridEnabled()
+    -- Check Settings module first, fallback to local setting
+    local SettingsModule = RUI:GetModule('Settings')
+    if SettingsModule then
+        return SettingsModule.snapToGrid
+    end
+    return self.snapToGrid or false
 end

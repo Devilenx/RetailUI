@@ -1151,7 +1151,8 @@ function Module:LoadDefaultSettings()
             anchor = "BOTTOM",
             posX = 0,
             posY = 60 + 4 * (index - 1) +
-                42 * (index - 1)
+                42 * (index - 1),
+            scale = 1
         }
     end
 
@@ -1159,14 +1160,16 @@ function Module:LoadDefaultSettings()
         RUI.DB.profile.widgets['actionBar' .. index] = {
             anchor = "RIGHT",
             posX = -4 * (index - 4) - 42 * (index - 4),
-            posY = -60
+            posY = -60,
+            scale = 1
         }
     end
 
     RUI.DB.profile.widgets['actionBar' .. SHAPESHIFT_ACTION_BAR_ID] = {
         anchor = "BOTTOM",
         posX = -94,
-        posY = 200
+        posY = 200,
+        scale = 1
     }
 
     RUI.DB.profile.widgets.microMenuBar = { anchor = "BOTTOMRIGHT", posX = 50, posY = 10 }
@@ -1177,31 +1180,36 @@ function Module:LoadDefaultSettings()
     RUI.DB.profile.widgets['actionBar' .. PET_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1
     }
 
     RUI.DB.profile.widgets['actionBar' .. BONUS_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1
     }
 
     RUI.DB.profile.widgets['actionBar' .. POSSESS_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1
     }
 
     RUI.DB.profile.widgets['actionBar' .. VEHICLE_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1
     }
 
     RUI.DB.profile.widgets['actionBar' .. MULTICAST_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1
     }
 end
 
@@ -1209,6 +1217,9 @@ function Module:UpdateWidgets()
     for index, actionBar in pairs(self.actionBars) do
         local widgetOptions = RUI.DB.profile.widgets['actionBar' .. index]
         actionBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+        if widgetOptions.scale then
+            actionBar:SetScale(widgetOptions.scale)
+        end
     end
 
     local widgetOptions = RUI.DB.profile.widgets.microMenuBar
