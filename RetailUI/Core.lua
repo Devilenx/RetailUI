@@ -43,7 +43,7 @@ function CreateUIFrame(width, height, frameName)
 		self:StopMovingOrSizing()
 		-- Apply snap-to-grid if enabled
 		local EditorMode = RUI:GetModule('EditorMode', true)
-		if EditorMode and EditorMode:IsEnabled() then
+		if EditorMode then
 			if EditorMode.GetSnapToGrid and EditorMode:GetSnapToGrid() then
 				EditorMode:SnapFrameToGrid(self)
 			end

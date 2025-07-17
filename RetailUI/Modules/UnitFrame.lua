@@ -996,16 +996,16 @@ function Module:OnDisable()
     self:UnregisterEvent("RUNE_TYPE_UPDATE")
 
     -- Unhook script hooks (restore original handlers)
-    if self:IsHooked(PlayerFrame, 'OnUpdate') then
+    if self.Unhook and self:IsHooked(PlayerFrame, 'OnUpdate') then
         self:Unhook(PlayerFrame, 'OnUpdate')
     end
-    if self:IsHooked(PlayerFrameHealthBar, 'OnValueChanged') then
+    if self.Unhook and self:IsHooked(PlayerFrameHealthBar, 'OnValueChanged') then
         self:Unhook(PlayerFrameHealthBar, 'OnValueChanged') 
     end
-    if self:IsHooked(TargetFrameHealthBar, 'OnValueChanged') then
+    if self.Unhook and self:IsHooked(TargetFrameHealthBar, 'OnValueChanged') then
         self:Unhook(TargetFrameHealthBar, 'OnValueChanged')
     end
-    if self:IsHooked(FocusFrameHealthBar, 'OnValueChanged') then
+    if self.Unhook and self:IsHooked(FocusFrameHealthBar, 'OnValueChanged') then
         self:Unhook(FocusFrameHealthBar, 'OnValueChanged')
     end
     if self:IsHooked(PetFrameHealthBar, 'OnValueChanged') then
