@@ -24,9 +24,18 @@ RUI.optionsSlash = {
             end,
             dialogHidden = true
         },
+        options = {
+            name = "Open Interface Options",
+            type = 'execute',
+            order = 1,
+            func = function()
+                InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
+            end,
+            dialogHidden = true
+        },
         scale = {
             name = "Scale",
-            order = 1,
+            order = 2,
             type = "group",
             args = {
                 player = {
@@ -88,7 +97,7 @@ RUI.optionsSlash = {
         default = {
             name = "Load Default Settings",
             type = 'execute',
-            order = 0,
+            order = 3,
             func = function()
                 local UnitFrameModule    = RUI:GetModule("UnitFrame")
                 local CastingBarModule   = RUI:GetModule("CastingBar")

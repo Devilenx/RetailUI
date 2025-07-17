@@ -92,15 +92,14 @@ function Module:SnapFrameToGrid(frame)
     if not self:GetSnapToGrid() then return end
     
     local gridSize = 32 -- Grid size in pixels
-    local scale = UIParent:GetEffectiveScale()
-    local x, y = GetCursorPosition()
-    x = x / scale
-    y = y / scale
+    local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
     
-    -- Snap to nearest grid position
-    x = math.floor(x / gridSize + 0.5) * gridSize
-    y = math.floor(y / gridSize + 0.5) * gridSize
+    if not point then return end
+    
+    -- Snap offsets to nearest grid position
+    xOfs = math.floor((xOfs + gridSize/2) / gridSize) * gridSize
+    yOfs = math.floor((yOfs + gridSize/2) / gridSize) * gridSize
     
     frame:ClearAllPoints()
-    frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
+    frame:SetPoint(point, relativeTo, relativePoint, xOfs, yOfs)
 end

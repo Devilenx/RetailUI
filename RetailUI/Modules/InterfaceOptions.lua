@@ -88,6 +88,10 @@ function Module:CreateOptionsPanel()
     snapCheckbox:SetPoint("TOPLEFT", 20, yOffset)
     snapCheckbox:SetScript("OnClick", function(self)
         RUI.DB.profile.snapToGrid = self:GetChecked()
+        local EditorMode = RUI:GetModule('EditorMode')
+        if EditorMode then
+            EditorMode:SetSnapToGrid(self:GetChecked())
+        end
     end)
     
     local snapText = snapCheckbox:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -134,13 +138,27 @@ function Module:CreateOptionsPanel()
     end
 
     optionsFrame.UpdateModuleScale = function(moduleKey, scale)
-        RUI.DB.profile.modules = RUI.DB.profile.modules or {}
-        RUI.DB.profile.modules[moduleKey] = RUI.DB.profile.modules[moduleKey] or {}
-        RUI.DB.profile.modules[moduleKey].scale = scale
-        
-        local module = moduleData[moduleKey].module
-        if module and module.UpdateWidgets then
-            module:UpdateWidgets()
+        -- For unit frames, use the existing widget-based scale system
+        if moduleKey == "UnitFrame" then
+            local widgets = {"player", "target", "focus", "targetOfTarget", "pet"}
+            for _, widget in pairs(widgets) do
+                SaveUIFrameScale(tostring(scale), widget)
+            end
+        elseif moduleKey == "CastingBar" then
+            -- Handle casting bar scale
+            if CastingBarFrame then
+                CastingBarFrame:SetScale(scale)
+            end
+        else
+            -- For other modules, store in module settings
+            RUI.DB.profile.modules = RUI.DB.profile.modules or {}
+            RUI.DB.profile.modules[moduleKey] = RUI.DB.profile.modules[moduleKey] or {}
+            RUI.DB.profile.modules[moduleKey].scale = scale
+            
+            local module = moduleData[moduleKey].module
+            if module and module.UpdateWidgets then
+                module:UpdateWidgets()
+            end
         end
     end
 
@@ -170,7 +188,25 @@ function Module:LoadSavedSettings()
         end
         
         if optionsFrame.sliders[moduleKey] then
-            optionsFrame.sliders[moduleKey]:SetValue(moduleSettings.scale or 1.0)
+            local scale = 1.0
+            -- Get scale from appropriate source
+            if moduleKey == "UnitFrame" then
+                -- Use player frame scale as representative
+                scale = GetUIFrameScale("player") or 1.0
+            elseif moduleKey == "CastingBar" then
+                -- Get casting bar scale
+                if CastingBarFrame then
+                    scale = CastingBarFrame:GetScale() or 1.0
+                end
+            else
+                scale = moduleSettings.scale or 1.0
+            end
+            
+            optionsFrame.sliders[moduleKey]:SetValue(scale)
+            local sliderText = getglobal(optionsFrame.sliders[moduleKey]:GetName() .. "Text")
+            if sliderText then
+                sliderText:SetText(moduleData[moduleKey].name .. " Scale: " .. string.format("%.1f", scale))
+            end
         end
     end
     
