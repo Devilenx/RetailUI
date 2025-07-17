@@ -43,6 +43,9 @@ function Module:OnEnable()
     BuffFrameModule      = RUI:GetModule("BuffFrame")
 
     self.editorGridFrame = CreateEditorGridFrame()
+    
+    -- Hook scale changes for dynamic edit box sizing
+    self:HookScaleChanges()
 end
 
 function Module:OnDisable() end
@@ -61,6 +64,9 @@ function Module:Show()
     MinimapModule:ShowEditorTest()
     QuestTrackerModule:ShowEditorTest()
     BuffFrameModule:ShowEditorTest()
+    
+    -- Update all edit box sizes to match current frame scales
+    self:UpdateAllEditBoxSizes()
 end
 
 function Module:Hide()
@@ -91,15 +97,95 @@ end
 function Module:SnapFrameToGrid(frame)
     if not self:GetSnapToGrid() then return end
     
-    local gridSize = 32 -- Grid size in pixels
-    local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
+    -- Use enhanced snap functionality if available
+    if RUI.SnapGrid then
+        RUI.SnapGrid:SnapFrameToGridEnhanced(frame)
+    else
+        -- Fallback to original snap logic
+        local gridSize = 32 -- Grid size in pixels
+        local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
+        
+        if not point then return end
+        
+        -- Snap offsets to nearest grid position with non-overlapping alignment
+        xOfs = math.floor((xOfs + gridSize/2) / gridSize) * gridSize
+        yOfs = math.floor((yOfs + gridSize/2) / gridSize) * gridSize
+        
+        frame:ClearAllPoints()
+        frame:SetPoint(point, relativeTo, relativePoint, xOfs, yOfs)
+    end
+end
+
+-- Function to update edit box size to match the actual frame size
+function Module:UpdateEditBoxSize(editFrame, actualFrame)
+    if not editFrame or not actualFrame then return end
     
-    if not point then return end
+    local width, height = actualFrame:GetSize()
+    local scale = actualFrame:GetScale() or 1.0
     
-    -- Snap offsets to nearest grid position
-    xOfs = math.floor((xOfs + gridSize/2) / gridSize) * gridSize
-    yOfs = math.floor((yOfs + gridSize/2) / gridSize) * gridSize
+    -- Apply scale to the edit box size
+    editFrame:SetSize(width * scale, height * scale)
+end
+
+-- Hook into scale changes to update edit boxes dynamically
+function Module:HookScaleChanges()
+    local function CreateScaleHook(frameName, editBoxName)
+        local frame = getglobal(frameName)
+        local editBox = getglobal(editBoxName)
+        
+        if frame and editBox then
+            -- Hook SetScale to update edit box size
+            if not frame.originalSetScale then
+                frame.originalSetScale = frame.SetScale
+                frame.SetScale = function(self, scale)
+                    frame.originalSetScale(self, scale)
+                    Module:UpdateEditBoxSize(editBox, frame)
+                end
+            end
+        end
+    end
     
-    frame:ClearAllPoints()
-    frame:SetPoint(point, relativeTo, relativePoint, xOfs, yOfs)
+    -- Hook scale changes for key frames
+    CreateScaleHook("PlayerFrame", "RUI_PlayerFrame")
+    CreateScaleHook("TargetFrame", "RUI_TargetFrame") 
+    CreateScaleHook("TargetFrameToT", "RUI_ToTFrame")
+    CreateScaleHook("PetFrame", "RUI_PetFrame")
+    CreateScaleHook("MinimapCluster", "RUI_MinimapFrame")
+    CreateScaleHook("BuffFrame", "RUI_BuffFrame")
+    
+    -- Hook for quest tracker and boss frames if they exist
+    if QuestMapFrame then
+        CreateScaleHook("QuestMapFrame", "RUI_QuestTrackerFrame")
+    end
+    if Boss1TargetFrame then
+        CreateScaleHook("Boss1TargetFrame", "RUI_Boss1Frame")
+    end
+end
+
+-- Update all edit box sizes to match their corresponding frames
+function Module:UpdateAllEditBoxSizes()
+    local framePairs = {
+        {"PlayerFrame", "RUI_PlayerFrame"},
+        {"TargetFrame", "RUI_TargetFrame"},
+        {"TargetFrameToT", "RUI_ToTFrame"},
+        {"PetFrame", "RUI_PetFrame"},
+        {"MinimapCluster", "RUI_MinimapFrame"},
+        {"BuffFrame", "RUI_BuffFrame"}
+    }
+    
+    -- Add conditional frames
+    if QuestMapFrame then
+        table.insert(framePairs, {"QuestMapFrame", "RUI_QuestTrackerFrame"})
+    end
+    if Boss1TargetFrame then
+        table.insert(framePairs, {"Boss1TargetFrame", "RUI_Boss1Frame"})
+    end
+    
+    for _, pair in ipairs(framePairs) do
+        local actualFrame = getglobal(pair[1])
+        local editFrame = getglobal(pair[2])
+        if actualFrame and editFrame then
+            self:UpdateEditBoxSize(editFrame, actualFrame)
+        end
+    end
 end

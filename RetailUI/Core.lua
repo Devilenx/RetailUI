@@ -21,7 +21,7 @@ function RUI:OnInitialize()
 	
 	-- Register custom /rui command handler to open settings by default
 	self:RegisterChatCommand("rui", function(input)
-		input = string.trim(input or "")
+		input = (input or ""):gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
 		if input == "" then
 			-- Default action: open settings panel
 			InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
