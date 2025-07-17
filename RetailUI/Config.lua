@@ -136,8 +136,7 @@ RUI.default = {
             ActionBar = { enabled = true, scale = 1.0 },
             UnitFrame = { enabled = true, scale = 1.0 },
             Minimap = { enabled = true, scale = 1.0 },
-            CastingBar = { enabled = true, scale = 1.0 },
-            VehicleUI = { enabled = true, scale = 1.0 }
+            CastingBar = { enabled = true, scale = 1.0 }
         },
         snapToGrid = false
     }

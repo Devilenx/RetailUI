@@ -1151,7 +1151,8 @@ function Module:LoadDefaultSettings()
             anchor = "BOTTOM",
             posX = 0,
             posY = 60 + 4 * (index - 1) +
-                42 * (index - 1)
+                42 * (index - 1),
+            scale = 1.0
         }
     end
 
@@ -1159,49 +1160,56 @@ function Module:LoadDefaultSettings()
         RUI.DB.profile.widgets['actionBar' .. index] = {
             anchor = "RIGHT",
             posX = -4 * (index - 4) - 42 * (index - 4),
-            posY = -60
+            posY = -60,
+            scale = 1.0
         }
     end
 
     RUI.DB.profile.widgets['actionBar' .. SHAPESHIFT_ACTION_BAR_ID] = {
         anchor = "BOTTOM",
         posX = -94,
-        posY = 200
+        posY = 200,
+        scale = 1.0
     }
 
-    RUI.DB.profile.widgets.microMenuBar = { anchor = "BOTTOMRIGHT", posX = 50, posY = 10 }
-    RUI.DB.profile.widgets.bagsBar = { anchor = "BOTTOMRIGHT", posX = 13, posY = 45 }
-    RUI.DB.profile.widgets.repExpBar = { anchor = "BOTTOM", posX = 0, posY = 35 }
+    RUI.DB.profile.widgets.microMenuBar = { anchor = "BOTTOMRIGHT", posX = 50, posY = 10, scale = 1.0 }
+    RUI.DB.profile.widgets.bagsBar = { anchor = "BOTTOMRIGHT", posX = 13, posY = 45, scale = 1.0 }
+    RUI.DB.profile.widgets.repExpBar = { anchor = "BOTTOM", posX = 0, posY = 35, scale = 1.0 }
 
     -- Static
     RUI.DB.profile.widgets['actionBar' .. PET_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1.0
     }
 
     RUI.DB.profile.widgets['actionBar' .. BONUS_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1.0
     }
 
     RUI.DB.profile.widgets['actionBar' .. POSSESS_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1.0
     }
 
     RUI.DB.profile.widgets['actionBar' .. VEHICLE_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1.0
     }
 
     RUI.DB.profile.widgets['actionBar' .. MULTICAST_ACTION_BAR_ID] = {
         anchor = "CENTER",
         posX = 0,
-        posY = 0
+        posY = 0,
+        scale = 1.0
     }
 end
 
@@ -1209,16 +1217,28 @@ function Module:UpdateWidgets()
     for index, actionBar in pairs(self.actionBars) do
         local widgetOptions = RUI.DB.profile.widgets['actionBar' .. index]
         actionBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+        if widgetOptions.scale then
+            actionBar:SetScale(widgetOptions.scale)
+        end
     end
 
     local widgetOptions = RUI.DB.profile.widgets.microMenuBar
     self.microMenuBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+    if widgetOptions.scale then
+        self.microMenuBar:SetScale(widgetOptions.scale)
+    end
 
     widgetOptions = RUI.DB.profile.widgets.bagsBar
     self.bagsBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+    if widgetOptions.scale then
+        self.bagsBar:SetScale(widgetOptions.scale)
+    end
 
     widgetOptions = RUI.DB.profile.widgets.repExpBar
     self.repExpBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+    if widgetOptions.scale then
+        self.repExpBar:SetScale(widgetOptions.scale)
+    end
 
     self.actionBars[BONUS_ACTION_BAR_ID]:SetPoint('LEFT', self.actionBars[MAIN_ACTION_BAR_ID], 'LEFT', 0, 0)
 

@@ -346,12 +346,15 @@ function Module:PLAYER_ENTERING_WORLD()
 end
 
 function Module:LoadDefaultSettings()
-    RUI.DB.profile.widgets.minimap = { anchor = "TOPRIGHT", posX = 0, posY = 0 }
+    RUI.DB.profile.widgets.minimap = { anchor = "TOPRIGHT", posX = 0, posY = 0, scale = 1.0 }
 end
 
 function Module:UpdateWidgets()
     local widgetOptions = RUI.DB.profile.widgets.minimap
     self.minimapFrame:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+    if widgetOptions.scale then
+        self.minimapFrame:SetScale(widgetOptions.scale)
+    end
 end
 
 function Module:ShowEditorTest()

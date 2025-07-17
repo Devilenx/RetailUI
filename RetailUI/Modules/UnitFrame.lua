@@ -995,19 +995,69 @@ function Module:OnDisable()
     self:UnregisterEvent("PLAYER_ENTERING_WORLD")
     self:UnregisterEvent("RUNE_TYPE_UPDATE")
 
-    PlayerFrame:Unhook('OnUpdate', PlayerFrame_OnUpdate)
-    PlayerFrameHealthBar:Unhook('OnValueChanged', HealthBar_OnValueChanged)
-    TargetFrameHealthBar:Unhook('OnValueChanged', HealthBar_OnValueChanged)
-    FocusFrameHealthBar:Unhook('OnValueChanged', HealthBar_OnValueChanged)
-    PetFrameHealthBar:Unhook('OnValueChanged', HealthBar_OnValueChanged)
+    -- Unhook script hooks (restore original handlers)
+    if self:IsHooked(PlayerFrame, 'OnUpdate') then
+        self:Unhook(PlayerFrame, 'OnUpdate')
+    end
+    if self:IsHooked(PlayerFrameHealthBar, 'OnValueChanged') then
+        self:Unhook(PlayerFrameHealthBar, 'OnValueChanged') 
+    end
+    if self:IsHooked(TargetFrameHealthBar, 'OnValueChanged') then
+        self:Unhook(TargetFrameHealthBar, 'OnValueChanged')
+    end
+    if self:IsHooked(FocusFrameHealthBar, 'OnValueChanged') then
+        self:Unhook(FocusFrameHealthBar, 'OnValueChanged')
+    end
+    if self:IsHooked(PetFrameHealthBar, 'OnValueChanged') then
+        self:Unhook(PetFrameHealthBar, 'OnValueChanged')
+    end
 
-    self:Unhook('PlayerFrame_UpdateStatus', PlayerFrame_UpdateStatus)
-    self:Unhook('PlayerFrame_UpdateGroupIndicator', PlayerFrame_UpdateGroupIndicator)
-    self:Unhook('PlayerFrame_ToPlayerArt', PlayerFrame_ToPlayerArt)
-    self:Unhook('PlayerFrame_ToVehicleArt', PlayerFrame_ToVehicleArt)
-    self:Unhook('PlayerFrame_UpdateArt', PlayerFrame_UpdateArt)
-    self:Unhook('PlayerFrame_SequenceFinished', PlayerFrame_SequenceFinished)
-    self:Unhook('PlayerFrame_AnimateOut', PlayerFrame_AnimateOut)
+    -- Unhook global function hooks
+    if self:IsHooked('PlayerFrame_UpdateStatus') then
+        self:Unhook('PlayerFrame_UpdateStatus')
+    end
+    if self:IsHooked('PlayerFrame_UpdateGroupIndicator') then
+        self:Unhook('PlayerFrame_UpdateGroupIndicator')
+    end
+    if self:IsHooked('PlayerFrame_ToPlayerArt') then
+        self:Unhook('PlayerFrame_ToPlayerArt')
+    end
+    if self:IsHooked('PlayerFrame_ToVehicleArt') then
+        self:Unhook('PlayerFrame_ToVehicleArt')
+    end
+    if self:IsHooked('PlayerFrame_UpdateArt') then
+        self:Unhook('PlayerFrame_UpdateArt')
+    end
+    if self:IsHooked('PlayerFrame_SequenceFinished') then
+        self:Unhook('PlayerFrame_SequenceFinished')
+    end
+    if self:IsHooked('PlayerFrame_AnimateOut') then
+        self:Unhook('PlayerFrame_AnimateOut')
+    end
+    if self:IsHooked('TargetFrame_UpdateBuffAnchor') then
+        self:Unhook('TargetFrame_UpdateBuffAnchor')
+    end
+    if self:IsHooked('TargetFrame_UpdateDebuffAnchor') then
+        self:Unhook('TargetFrame_UpdateDebuffAnchor')
+    end
+    if self:IsHooked('TargetFrame_CheckClassification') then
+        self:Unhook('TargetFrame_CheckClassification')
+    end
+    if self:IsHooked('FocusFrame_SetSmallSize') then
+        self:Unhook('FocusFrame_SetSmallSize')
+    end
+    if self:IsHooked('UnitFrameHealthBar_Update') then
+        self:Unhook('UnitFrameHealthBar_Update')
+    end
+    if self:IsHooked('UnitFrameManaBar_UpdateType') then
+        self:Unhook('UnitFrameManaBar_UpdateType')
+    end
+    if self:IsHooked('PetFrame_Update') then
+        self:Unhook('PetFrame_Update')
+    end
+    if self:IsHooked('PlayerFrame_UpdateRolesAssigned') then
+        self:Unhook('PlayerFrame_UpdateRolesAssigned')
+    end
     self:Unhook('TargetFrame_UpdateBuffAnchor', TargetFrame_UpdateBuffAnchor)
     self:Unhook('TargetFrame_UpdateDebuffAnchor', TargetFrame_UpdateDebuffAnchor)
     self:Unhook('TargetFrame_CheckClassification', TargetFrame_CheckClassification)

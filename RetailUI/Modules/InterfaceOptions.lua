@@ -14,8 +14,7 @@ local moduleData = {
     ActionBar = { name = "Action Bars", module = nil },
     UnitFrame = { name = "Unit Frames", module = nil },
     Minimap = { name = "Minimap", module = nil },
-    CastingBar = { name = "Casting Bars", module = nil },
-    VehicleUI = { name = "Vehicle UI", module = nil }
+    CastingBar = { name = "Casting Bars", module = nil }
 }
 
 function Module:OnEnable()
@@ -24,7 +23,6 @@ function Module:OnEnable()
     moduleData.UnitFrame.module = RUI:GetModule("UnitFrame")
     moduleData.Minimap.module = RUI:GetModule("Minimap")
     moduleData.CastingBar.module = RUI:GetModule("CastingBar")
-    moduleData.VehicleUI.module = RUI:GetModule("VehicleUI")
     
     self:CreateOptionsPanel()
 end
@@ -35,7 +33,7 @@ function Module:CreateOptionsPanel()
     -- Create main options frame
     optionsFrame = CreateFrame("Frame", "RetailUISettingsPanel", UIParent)
     optionsFrame.name = "RetailUI Settings"
-    optionsFrame:SetSize(400, 500)
+    optionsFrame:SetSize(500, 400)
     optionsFrame:Hide()
 
     -- Title
@@ -43,29 +41,35 @@ function Module:CreateOptionsPanel()
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("RetailUI Settings")
 
-    local yOffset = -50
+    local yOffset = -40
     local checkboxes = {}
     local sliders = {}
+    local moduleIndex = 0
 
-    -- Create checkboxes and sliders for each module
+    -- Create checkboxes and sliders for each module in two columns
     for moduleKey, moduleInfo in pairs(moduleData) do
+        local column = (moduleIndex % 2)
+        local row = math.floor(moduleIndex / 2)
+        local xOffset = column == 0 and 20 or 260
+        local currentYOffset = yOffset - (row * 65)
+        
         -- Module enable checkbox
         local checkbox = CreateFrame("CheckButton", "RetailUI" .. moduleKey .. "EnableCheckbox", optionsFrame, "InterfaceOptionsCheckButtonTemplate")
-        checkbox:SetPoint("TOPLEFT", 20, yOffset)
+        checkbox:SetPoint("TOPLEFT", xOffset, currentYOffset)
         checkbox:SetScript("OnClick", function(self)
             self:GetParent().UpdateModuleState(moduleKey, self:GetChecked())
         end)
         
-        local checkboxText = checkbox:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        local checkboxText = checkbox:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
         checkboxText:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
         checkboxText:SetText("Enable " .. moduleInfo.name)
         
         checkboxes[moduleKey] = checkbox
 
-        -- Module scale slider
+        -- Module scale slider (smaller and more compact)
         local slider = CreateFrame("Slider", "RetailUI" .. moduleKey .. "ScaleSlider", optionsFrame, "OptionsSliderTemplate")
-        slider:SetPoint("TOPLEFT", 40, yOffset - 30)
-        slider:SetSize(200, 20)
+        slider:SetPoint("TOPLEFT", xOffset + 20, currentYOffset - 25)
+        slider:SetSize(180, 15)
         slider:SetMinMaxValues(0.5, 2.0)
         slider:SetValue(1.0)
         slider:SetValueStep(0.1)
@@ -79,13 +83,15 @@ function Module:CreateOptionsPanel()
         getglobal(slider:GetName() .. "Text"):SetText(moduleInfo.name .. " Scale: 1.0")
         
         sliders[moduleKey] = slider
-
-        yOffset = yOffset - 80
+        moduleIndex = moduleIndex + 1
     end
+
+    -- Calculate position for controls below the modules (2 rows of modules = 130px)
+    local controlsYOffset = yOffset - 130
 
     -- Snap to Grid checkbox for editor mode
     local snapCheckbox = CreateFrame("CheckButton", "RetailUISnapToGridCheckbox", optionsFrame, "InterfaceOptionsCheckButtonTemplate")
-    snapCheckbox:SetPoint("TOPLEFT", 20, yOffset)
+    snapCheckbox:SetPoint("TOPLEFT", 20, controlsYOffset)
     snapCheckbox:SetScript("OnClick", function(self)
         RUI.DB.profile.snapToGrid = self:GetChecked()
         local EditorMode = RUI:GetModule('EditorMode')
@@ -100,7 +106,7 @@ function Module:CreateOptionsPanel()
 
     -- Open Grid Layout button
     local gridButton = CreateFrame("Button", "RetailUIGridLayoutButton", optionsFrame, "UIPanelButtonTemplate")
-    gridButton:SetPoint("TOPLEFT", 20, yOffset - 40)
+    gridButton:SetPoint("TOPLEFT", 20, controlsYOffset - 35)
     gridButton:SetSize(120, 25)
     gridButton:SetText("Open Grid Layout")
     gridButton:SetScript("OnClick", function()
@@ -127,13 +133,11 @@ function Module:CreateOptionsPanel()
         RUI.DB.profile.modules[moduleKey] = RUI.DB.profile.modules[moduleKey] or {}
         RUI.DB.profile.modules[moduleKey].enabled = enabled
         
-        local module = moduleData[moduleKey].module
-        if module then
-            if enabled then
-                if module.Enable then module:Enable() end
-            else
-                if module.Disable then module:Disable() end
-            end
+        -- Use proper AceAddon APIs for enabling/disabling modules
+        if enabled then
+            RUI:EnableModule(moduleKey)
+        else
+            RUI:DisableModule(moduleKey)
         end
     end
 
@@ -148,6 +152,38 @@ function Module:CreateOptionsPanel()
             -- Handle casting bar scale
             if CastingBarFrame then
                 CastingBarFrame:SetScale(scale)
+            end
+        elseif moduleKey == "ActionBar" then
+            -- Handle action bar scale using widget system
+            local actionBarModule = moduleData.ActionBar.module
+            if actionBarModule then
+                -- Update all action bar widgets
+                for index = 1, 5 do
+                    local widgetKey = 'actionBar' .. index
+                    if RUI.DB.profile.widgets[widgetKey] then
+                        RUI.DB.profile.widgets[widgetKey].scale = scale
+                    end
+                end
+                -- Update special bars
+                if RUI.DB.profile.widgets.microMenuBar then
+                    RUI.DB.profile.widgets.microMenuBar.scale = scale
+                end
+                if RUI.DB.profile.widgets.bagsBar then
+                    RUI.DB.profile.widgets.bagsBar.scale = scale
+                end
+                if RUI.DB.profile.widgets.repExpBar then
+                    RUI.DB.profile.widgets.repExpBar.scale = scale
+                end
+                actionBarModule:UpdateWidgets()
+            end
+        elseif moduleKey == "Minimap" then
+            -- Handle minimap scale using widget system
+            local minimapModule = moduleData.Minimap.module
+            if minimapModule then
+                if RUI.DB.profile.widgets.minimap then
+                    RUI.DB.profile.widgets.minimap.scale = scale
+                end
+                minimapModule:UpdateWidgets()
             end
         else
             -- For other modules, store in module settings
@@ -184,7 +220,10 @@ function Module:LoadSavedSettings()
         local moduleSettings = RUI.DB.profile.modules[moduleKey] or { enabled = true, scale = 1.0 }
         
         if optionsFrame.checkboxes[moduleKey] then
-            optionsFrame.checkboxes[moduleKey]:SetChecked(moduleSettings.enabled)
+            -- Check if module is actually enabled using AceAddon API
+            local module = RUI:GetModule(moduleKey, true)
+            local isEnabled = module and module:IsEnabled() or false
+            optionsFrame.checkboxes[moduleKey]:SetChecked(isEnabled)
         end
         
         if optionsFrame.sliders[moduleKey] then
@@ -197,6 +236,16 @@ function Module:LoadSavedSettings()
                 -- Get casting bar scale
                 if CastingBarFrame then
                     scale = CastingBarFrame:GetScale() or 1.0
+                end
+            elseif moduleKey == "ActionBar" then
+                -- Get action bar scale from first action bar widget
+                if RUI.DB.profile.widgets and RUI.DB.profile.widgets.actionBar1 then
+                    scale = RUI.DB.profile.widgets.actionBar1.scale or 1.0
+                end
+            elseif moduleKey == "Minimap" then
+                -- Get minimap scale from widget
+                if RUI.DB.profile.widgets and RUI.DB.profile.widgets.minimap then
+                    scale = RUI.DB.profile.widgets.minimap.scale or 1.0
                 end
             else
                 scale = moduleSettings.scale or 1.0
@@ -224,7 +273,6 @@ function Module:ResetToDefaults()
     local MinimapModule      = RUI:GetModule("Minimap")
     local QuestTrackerModule = RUI:GetModule("QuestTracker")
     local BuffFrameModule    = RUI:GetModule("BuffFrame")
-    local VehicleUIModule    = RUI:GetModule("VehicleUI")
 
     if ActionBarModule and ActionBarModule.LoadDefaultSettings then
         ActionBarModule:LoadDefaultSettings()
@@ -254,11 +302,6 @@ function Module:ResetToDefaults()
     if BuffFrameModule and BuffFrameModule.LoadDefaultSettings then
         BuffFrameModule:LoadDefaultSettings()
         BuffFrameModule:UpdateWidgets()
-    end
-
-    if VehicleUIModule and VehicleUIModule.LoadDefaultSettings then
-        VehicleUIModule:LoadDefaultSettings()
-        VehicleUIModule:UpdateWidgets()
     end
 
     -- Reset module states to defaults
