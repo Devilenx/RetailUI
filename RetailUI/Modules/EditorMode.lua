@@ -90,23 +90,28 @@ function Module:SnapFrameToGrid(frame)
         return
     end
     
-    local w, h = frame:GetSize()
-    if w == 0 or h == 0 then
-        -- Fallback to default grid size if frame has no size
-        w, h = 32, 32
-    end
-    
     local x, y = frame:GetLeft(), frame:GetTop()
     if not x or not y then
         return -- Frame position not available
     end
     
-    -- Snap to grid using frame dimensions as grid size
-    local snappedX = math.floor(x / w + 0.5) * w
-    local snappedY = math.floor(y / h + 0.5) * h
+    -- Use fixed 32px grid size for consistent snapping
+    local gridSize = 32
+    local parent = UIParent
+    
+    -- Calculate position relative to parent
+    local parentLeft = parent:GetLeft() or 0
+    local parentTop = parent:GetTop() or UIParent:GetHeight()
+    
+    local relativeX = x - parentLeft
+    local relativeY = parentTop - y
+    
+    -- Snap to grid
+    local snappedX = math.floor(relativeX / gridSize + 0.5) * gridSize
+    local snappedY = math.floor(relativeY / gridSize + 0.5) * gridSize
     
     frame:ClearAllPoints()
-    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", snappedX, -snappedY)
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", snappedX, -snappedY)
 end
 
 -- Enable or disable snap-to-grid functionality

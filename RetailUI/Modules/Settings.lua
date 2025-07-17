@@ -20,11 +20,9 @@ Module.snapToGrid = false
 
 -- Module configuration for sliders
 local moduleConfigs = {
-    { key = "targetOfTarget", name = "Target of Target Frame", module = "UnitFrame" },
     { key = "player", name = "Player Frame", module = "UnitFrame" },
     { key = "target", name = "Target Frame", module = "UnitFrame" },
     { key = "playerCastingBar", name = "Cast Bar Frame", module = "CastingBar" },
-    { key = "buffs", name = "Buff Frame", module = "BuffFrame" },
     { key = "actionBar1", name = "Action Bar 1 (Main)", module = "ActionBar" },
     { key = "actionBar2", name = "Action Bar 2", module = "ActionBar" },
     { key = "actionBar3", name = "Action Bar 3", module = "ActionBar" },
@@ -137,7 +135,7 @@ function Module:CreateSettingsPanel()
     
     -- Create Reset to Default button (manual creation for WoW 3.3.5 compatibility)
     local resetButton = CreateFrame("Button", nil, scrollChild)
-    resetButton:SetSize(140, 24)
+    resetButton:SetSize(160, 24)
     resetButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 20, yOffset)
     resetButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-Button-Up")
     resetButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-Button-Down")
@@ -146,11 +144,12 @@ function Module:CreateSettingsPanel()
     resetButton:SetText("Reset to Default")
     resetButton:SetScript("OnClick", function()
         self:ResetToDefault()
+        ReloadUI()
     end)
     
     -- Create Open Grid Layout button (manual creation for WoW 3.3.5 compatibility)
     local gridButton = CreateFrame("Button", nil, scrollChild)
-    gridButton:SetSize(140, 24)
+    gridButton:SetSize(160, 24)
     gridButton:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
     gridButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-Button-Up")
     gridButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-Button-Down")
@@ -252,14 +251,14 @@ function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
     valueText:SetPoint("BOTTOMRIGHT", slider, "TOPRIGHT", 0, 4)
     valueText:SetText(string.format("%.0f%%", currentScale * 100))
     
-    -- Set slider labels
-    slider.Low = slider:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    slider.Low:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, 0)
-    slider.Low:SetText("50%")
+    -- Set percentage labels only
+    local leftLabel = slider:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    leftLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, 0)
+    leftLabel:SetText("50%")
     
-    slider.High = slider:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    slider.High:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, 0)
-    slider.High:SetText("200%")
+    local rightLabel = slider:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    rightLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, 0)
+    rightLabel:SetText("200%")
     
     -- Handle value changes
     slider:SetScript("OnValueChanged", function(self, value)
@@ -310,10 +309,6 @@ function Module:UpdateModuleScale(widgetKey, scale)
         if CastingBarFrame then
             CastingBarFrame:SetScale(scale)
         end
-    elseif widgetKey == "buffs" then
-        if BuffFrame then
-            BuffFrame:SetScale(scale)
-        end
     elseif widgetKey == "player" then
         if PlayerFrame then
             PlayerFrame:SetScale(scale)
@@ -322,62 +317,16 @@ function Module:UpdateModuleScale(widgetKey, scale)
         if TargetFrame then
             TargetFrame:SetScale(scale)
         end
-    elseif widgetKey == "targetOfTarget" then
-        -- Handle TargetOfTarget frame - check different possible names for WoW 3.3.5
-        if TargetFrameToT then
-            TargetFrameToT:SetScale(scale)
-        elseif _G["TargetofTargetFrame"] then
-            _G["TargetofTargetFrame"]:SetScale(scale)
-        elseif _G["TargetofTarget"] then
-            _G["TargetofTarget"]:SetScale(scale)
-        end
     elseif string.find(widgetKey, "actionBar") then
-        -- Handle action bars with direct frame scaling
-        local barNumber = tonumber(string.match(widgetKey, "actionBar(%d+)"))
-        if barNumber then
-            if barNumber == 1 then
-                -- Main Action Bar
-                if MainMenuBar then
-                    MainMenuBar:SetScale(scale)
-                end
-            elseif barNumber == 2 then
-                -- Bottom Left Action Bar 
-                if MultiBarBottomLeft then
-                    MultiBarBottomLeft:SetScale(scale)
-                end
-            elseif barNumber == 3 then
-                -- Bottom Right Action Bar
-                if MultiBarBottomRight then
-                    MultiBarBottomRight:SetScale(scale)
-                end
-            elseif barNumber == 4 then
-                -- Left Action Bar
-                if MultiBarLeft then
-                    MultiBarLeft:SetScale(scale)
-                end
-            elseif barNumber == 5 then
-                -- Right Action Bar
-                if MultiBarRight then
-                    MultiBarRight:SetScale(scale)
-                end
-            elseif barNumber == 6 then
-                -- Bonus Action Bar (if available)
-                if BonusActionBarFrame then
-                    BonusActionBarFrame:SetScale(scale)
-                end
-            elseif barNumber == 7 then
-                -- Shapeshift/Stance Bar
-                if ShapeshiftBarFrame then
-                    ShapeshiftBarFrame:SetScale(scale)
-                elseif StanceBarFrame then
-                    StanceBarFrame:SetScale(scale)
-                end
-            end
+        -- Handle action bars using the ActionBar module's system
+        local ActionBarModule = RUI:GetModule("ActionBar", true) -- true = silent
+        if ActionBarModule and ActionBarModule.UpdateWidgets then
+            ActionBarModule:UpdateWidgets()
         end
     end
     
     -- Also try to call the existing UnitFrame module update if it's a unit frame
-    if widgetKey == "player" or widgetKey == "target" or widgetKey == "targetOfTarget" then
+    if widgetKey == "player" or widgetKey == "target" then
         local UnitFrameModule = RUI:GetModule("UnitFrame", true) -- true = silent
         if UnitFrameModule and UnitFrameModule.UpdateWidgets then
             UnitFrameModule:UpdateWidgets()
