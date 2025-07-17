@@ -18,6 +18,21 @@ RUI.DB = nil
 function RUI:OnInitialize()
 	RUI.DB = AceDB:New("RetailUIDB", RUI.default, true)
 	AceConfig:RegisterOptionsTable("RUI Commands", RUI.optionsSlash, "rui")
+	
+	-- Register custom /rui command handler to open settings by default
+	self:RegisterChatCommand("rui", function(input)
+		input = string.trim(input or "")
+		if input == "" then
+			-- Default action: open settings panel
+			InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
+		else
+			-- Pass to AceConfig for subcommands
+			local AceConfigCmd = LibStub("AceConfigCmd-3.0", true)
+			if AceConfigCmd then
+				AceConfigCmd:HandleCommand("rui", "RUI Commands", input)
+			end
+		end
+	end)
 end
 
 function RUI:OnEnable()

@@ -11,132 +11,94 @@ local optionsFrame = nil
 local scrollFrame = nil
 local scrollChild = nil
 
--- Module definitions (removed VehicleUI)
-local moduleData = {
-    ActionBar = { name = "Action Bars", module = nil },
-    UnitFrame = { name = "Unit Frames", module = nil },
-    Minimap = { name = "Minimap", module = nil },
-    CastingBar = { name = "Casting Bars", module = nil }
-}
-
--- Action bar definitions for individual control
-local actionBarData = {
-    actionBar1 = { name = "Action Bar 1", frame = "ActionButton" },
-    actionBar2 = { name = "Action Bar 2", frame = "MultiBarBottomLeftButton" },
-    actionBar3 = { name = "Action Bar 3", frame = "MultiBarBottomRightButton" },
-    actionBar4 = { name = "Action Bar 4", frame = "MultiBarRightButton" },
-    actionBar5 = { name = "Action Bar 5", frame = "MultiBarLeftButton" },
-    actionBar6 = { name = "Action Bar 6", frame = "MultiBarRightButton" },
-    actionBar7 = { name = "Action Bar 7", frame = "MultiBarLeftButton" },
-    microMenuBar = { name = "Micro Menu", frame = "MicroButtonAndBagsBar" },
-    bagsBar = { name = "Bags Bar", frame = "MicroButtonAndBagsBar" }
+-- Scale slider definitions in exact order requested
+local scaleSliders = {
+    { key = "questTracker", name = "QuestTrackerFrame Scale", frameRef = "QuestMapFrame" },
+    { key = "buffFrame", name = "BuffFrame Scale", frameRef = "BuffFrame" },
+    { key = "boss1Frame", name = "Boss1Frame Scale", frameRef = "Boss1TargetFrame" },
+    { key = "playerFrame", name = "PlayerFrame Scale", frameRef = "PlayerFrame" },
+    { key = "targetFrame", name = "TargetFrame Scale", frameRef = "TargetFrame" },
+    { key = "totFrame", name = "ToTFrame Scale", frameRef = "TargetFrameToT" },
+    { key = "petFrame", name = "PetFrame Scale", frameRef = "PetFrame" },
+    { key = "minimap", name = "Minimap Scale", frameRef = "MinimapCluster" },
+    { key = "microMenuBar", name = "MicroMenuBar Scale", frameRef = "MicroButtonAndBagsBar" },
+    { key = "bagsBar", name = "BagsBar Scale", frameRef = "MicroButtonAndBagsBar" },
+    { key = "actionBar1", name = "Action Bar 1 Scale", frameRef = "ActionButton1" },
+    { key = "actionBar2", name = "Action Bar 2 Scale", frameRef = "MultiBarBottomLeftButton1" },
+    { key = "actionBar3", name = "Action Bar 3 Scale", frameRef = "MultiBarBottomRightButton1" },
+    { key = "actionBar4", name = "Action Bar 4 Scale", frameRef = "MultiBarRightButton1" },
+    { key = "actionBar5", name = "Action Bar 5 Scale", frameRef = "MultiBarLeftButton1" },
+    { key = "actionBar6", name = "Action Bar 6 Scale", frameRef = "MultiBarRightButton7" },
+    { key = "actionBar7", name = "Action Bar 7 Scale", frameRef = "MultiBarLeftButton7" }
 }
 
 function Module:OnEnable()
-    -- Get module references
-    moduleData.ActionBar.module = RUI:GetModule("ActionBar")
-    moduleData.UnitFrame.module = RUI:GetModule("UnitFrame")
-    moduleData.Minimap.module = RUI:GetModule("Minimap")
-    moduleData.CastingBar.module = RUI:GetModule("CastingBar")
-    
     self:CreateOptionsPanel()
 end
 
 function Module:OnDisable() end
 
 function Module:CreateOptionsPanel()
-    -- Create main options frame
+    -- Create main options frame with modern styling
     optionsFrame = CreateFrame("Frame", "RetailUISettingsPanel", UIParent)
     optionsFrame.name = "RetailUI Settings"
-    optionsFrame:SetSize(600, 500)
+    optionsFrame:SetSize(650, 550)
     optionsFrame:Hide()
 
-    -- Title
+    -- Modern background
+    local bg = optionsFrame:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+
+    -- Title with modern styling
     local title = optionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetPoint("TOPLEFT", 20, -20)
     title:SetText("RetailUI Settings")
+    title:SetTextColor(1, 0.82, 0, 1) -- Gold color
 
-    -- Create scroll frame to prevent overflow
+    -- Subtitle
+    local subtitle = optionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
+    subtitle:SetText("Adjust UI element scales - changes apply immediately")
+    subtitle:SetTextColor(0.8, 0.8, 0.8, 1)
+
+    -- Create scroll frame for all content
     scrollFrame = CreateFrame("ScrollFrame", "RetailUIScrollFrame", optionsFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 16, -40)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -32, 16)
+    scrollFrame:SetPoint("TOPLEFT", 20, -60)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -32, 80)
 
-    -- Create scroll child
+    -- Modern scroll bar styling
+    local scrollBar = scrollFrame.ScrollBar or _G[scrollFrame:GetName().."ScrollBar"]
+    if scrollBar then
+        scrollBar:SetAlpha(0.7)
+    end
+
+    -- Create scroll child with padding
     scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetSize(550, 1000) -- Large enough for all content
+    scrollChild:SetSize(580, 800) -- Increased height for all sliders
     scrollFrame:SetScrollChild(scrollChild)
 
-    local yOffset = -10
-    local checkboxes = {}
+    local yOffset = -20
     local sliders = {}
 
-    -- Create module enable checkboxes
-    for moduleKey, moduleInfo in pairs(moduleData) do
-        -- Module enable checkbox
-        local checkbox = CreateFrame("CheckButton", "RetailUI" .. moduleKey .. "EnableCheckbox", scrollChild, "InterfaceOptionsCheckButtonTemplate")
-        checkbox:SetPoint("TOPLEFT", 0, yOffset)
-        checkbox:SetScript("OnClick", function(self)
-            Module:UpdateModuleState(moduleKey, self:GetChecked())
-        end)
-        
-        local checkboxText = checkbox:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-        checkboxText:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
-        checkboxText:SetText("Enable " .. moduleInfo.name)
-        
-        checkboxes[moduleKey] = checkbox
-        yOffset = yOffset - 35
+    -- Create all scale sliders in exact order requested
+    for i, sliderData in ipairs(scaleSliders) do
+        local slider = self:CreateScaleSlider(sliderData, yOffset)
+        sliders[sliderData.key] = slider
+        yOffset = yOffset - 45 -- Increased spacing for better visibility
     end
 
-    yOffset = yOffset - 20
+    yOffset = yOffset - 30
 
-    -- Create individual action bar sliders
-    local actionBarSliders = {}
-    for barKey, barInfo in pairs(actionBarData) do
-        local slider = CreateFrame("Slider", "RetailUI" .. barKey .. "ScaleSlider", scrollChild, "OptionsSliderTemplate")
-        slider:SetPoint("TOPLEFT", 0, yOffset)
-        slider:SetSize(300, 15)
-        slider:SetMinMaxValues(0.5, 2.0)
-        slider:SetValue(1.0)
-        slider:SetValueStep(0.1)
-        slider:SetScript("OnValueChanged", function(self, value)
-            Module:UpdateActionBarScale(barKey, value)
-            getglobal(self:GetName() .. "Text"):SetText(barInfo.name .. " Scale: " .. string.format("%.1f", value))
-        end)
-        
-        getglobal(slider:GetName() .. "Low"):SetText("0.5")
-        getglobal(slider:GetName() .. "High"):SetText("2.0")
-        getglobal(slider:GetName() .. "Text"):SetText(barInfo.name .. " Scale: 1.0")
-        
-        actionBarSliders[barKey] = slider
-        yOffset = yOffset - 35
-    end
+    -- Modern section separator
+    local separator = scrollChild:CreateTexture(nil, "ARTWORK")
+    separator:SetPoint("TOPLEFT", 0, yOffset)
+    separator:SetSize(560, 2)
+    separator:SetColorTexture(0.3, 0.3, 0.3, 0.8)
 
-    -- Create other module sliders
-    for moduleKey, moduleInfo in pairs(moduleData) do
-        if moduleKey ~= "ActionBar" then -- Skip action bars as they have individual controls
-            local slider = CreateFrame("Slider", "RetailUI" .. moduleKey .. "ScaleSlider", scrollChild, "OptionsSliderTemplate")
-            slider:SetPoint("TOPLEFT", 0, yOffset)
-            slider:SetSize(300, 15)
-            slider:SetMinMaxValues(0.5, 2.0)
-            slider:SetValue(1.0)
-            slider:SetValueStep(0.1)
-            slider:SetScript("OnValueChanged", function(self, value)
-                Module:UpdateModuleScale(moduleKey, value)
-                getglobal(self:GetName() .. "Text"):SetText(moduleInfo.name .. " Scale: " .. string.format("%.1f", value))
-            end)
-            
-            getglobal(slider:GetName() .. "Low"):SetText("0.5")
-            getglobal(slider:GetName() .. "High"):SetText("2.0")
-            getglobal(slider:GetName() .. "Text"):SetText(moduleInfo.name .. " Scale: 1.0")
-            
-            sliders[moduleKey] = slider
-            yOffset = yOffset - 35
-        end
-    end
+    yOffset = yOffset - 40
 
-    yOffset = yOffset - 20
-
-    -- Snap to Grid checkbox for editor mode
+    -- Snap to Grid checkbox with modern styling
     local snapCheckbox = CreateFrame("CheckButton", "RetailUISnapToGridCheckbox", scrollChild, "InterfaceOptionsCheckButtonTemplate")
     snapCheckbox:SetPoint("TOPLEFT", 0, yOffset)
     snapCheckbox:SetScript("OnClick", function(self)
@@ -150,15 +112,28 @@ function Module:CreateOptionsPanel()
     local snapText = snapCheckbox:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     snapText:SetPoint("LEFT", snapCheckbox, "RIGHT", 5, 0)
     snapText:SetText("Snap to Grid (Editor Mode)")
+    snapText:SetTextColor(0.9, 0.9, 0.9, 1)
 
-    yOffset = yOffset - 40
+    yOffset = yOffset - 50
+
+    -- Modern button styling
+    local function CreateModernButton(name, text, width, onClickFunc)
+        local button = CreateFrame("Button", name, scrollChild, "UIPanelButtonTemplate")
+        button:SetSize(width, 32)
+        button:SetText(text)
+        button:SetScript("OnClick", onClickFunc)
+        
+        -- Modern button styling
+        button:SetNormalFontObject("GameFontNormal")
+        button:GetNormalTexture():SetColorTexture(0.2, 0.2, 0.2, 0.8)
+        button:GetHighlightTexture():SetColorTexture(0.3, 0.3, 0.3, 0.8)
+        button:GetPushedTexture():SetColorTexture(0.1, 0.1, 0.1, 0.8)
+        
+        return button
+    end
 
     -- Open Grid Layout button
-    local gridButton = CreateFrame("Button", "RetailUIGridLayoutButton", scrollChild, "UIPanelButtonTemplate")
-    gridButton:SetPoint("TOPLEFT", 0, yOffset)
-    gridButton:SetSize(120, 25)
-    gridButton:SetText("Open Grid Layout")
-    gridButton:SetScript("OnClick", function()
+    local gridButton = CreateModernButton("RetailUIGridLayoutButton", "Open Grid Layout", 140, function()
         local EditorMode = RUI:GetModule('EditorMode')
         if EditorMode:IsShown() then
             EditorMode:Hide()
@@ -166,20 +141,16 @@ function Module:CreateOptionsPanel()
             EditorMode:Show()
         end
     end)
+    gridButton:SetPoint("TOPLEFT", 0, yOffset)
 
     -- Reset to Default button
-    local resetButton = CreateFrame("Button", "RetailUIResetButton", scrollChild, "UIPanelButtonTemplate")
-    resetButton:SetPoint("LEFT", gridButton, "RIGHT", 10, 0)
-    resetButton:SetSize(120, 25)
-    resetButton:SetText("Reset to Default")
-    resetButton:SetScript("OnClick", function()
+    local resetButton = CreateModernButton("RetailUIResetButton", "Reset to Default", 140, function()
         Module:ResetToDefaults()
     end)
+    resetButton:SetPoint("LEFT", gridButton, "RIGHT", 15, 0)
 
     -- Store references
-    optionsFrame.checkboxes = checkboxes
     optionsFrame.sliders = sliders
-    optionsFrame.actionBarSliders = actionBarSliders
     optionsFrame.snapCheckbox = snapCheckbox
 
     -- Initialize values from saved settings
@@ -189,74 +160,96 @@ function Module:CreateOptionsPanel()
     InterfaceOptions_AddCategory(optionsFrame)
 end
 
-function Module:UpdateModuleState(moduleKey, enabled)
-    RUI.DB.profile.modules = RUI.DB.profile.modules or {}
-    RUI.DB.profile.modules[moduleKey] = RUI.DB.profile.modules[moduleKey] or {}
-    RUI.DB.profile.modules[moduleKey].enabled = enabled
+function Module:CreateScaleSlider(sliderData, yOffset)
+    local slider = CreateFrame("Slider", "RetailUI" .. sliderData.key .. "ScaleSlider", scrollChild, "OptionsSliderTemplate")
+    slider:SetPoint("TOPLEFT", 0, yOffset)
+    slider:SetSize(350, 20)
+    slider:SetMinMaxValues(0.5, 2.0)
+    slider:SetValue(1.0)
+    slider:SetValueStep(0.05) -- Finer control
     
-    -- Use proper AceAddon APIs for enabling/disabling modules
-    local module = RUI:GetModule(moduleKey, true)
-    if module then
-        if enabled then
-            if not module:IsEnabled() then
-                RUI:EnableModule(moduleKey)
-            end
-        else
-            if module:IsEnabled() then
-                RUI:DisableModule(moduleKey)
-            end
+    -- Modern slider styling
+    slider:GetThumbTexture():SetColorTexture(1, 0.82, 0, 1) -- Gold thumb
+    
+    slider:SetScript("OnValueChanged", function(self, value)
+        Module:UpdateFrameScale(sliderData.key, sliderData.frameRef, value)
+        -- Update text without chat feedback
+        local sliderText = getglobal(self:GetName() .. "Text")
+        if sliderText then
+            sliderText:SetText(sliderData.name .. ": " .. string.format("%.2f", value))
         end
+    end)
+    
+    -- Set slider labels with modern styling
+    local lowText = getglobal(slider:GetName() .. "Low")
+    local highText = getglobal(slider:GetName() .. "High") 
+    local titleText = getglobal(slider:GetName() .. "Text")
+    
+    if lowText then
+        lowText:SetText("0.5")
+        lowText:SetTextColor(0.7, 0.7, 0.7, 1)
     end
+    if highText then
+        highText:SetText("2.0")
+        highText:SetTextColor(0.7, 0.7, 0.7, 1)
+    end
+    if titleText then
+        titleText:SetText(sliderData.name .. ": 1.00")
+        titleText:SetTextColor(0.9, 0.9, 0.9, 1)
+    end
+    
+    return slider
 end
 
-function Module:UpdateActionBarScale(barKey, scale)
-    -- Handle individual action bar scaling
-    if RUI.DB.profile.widgets then
-        if RUI.DB.profile.widgets[barKey] then
-            RUI.DB.profile.widgets[barKey].scale = scale
-        end
-    end
+function Module:UpdateFrameScale(key, frameRef, scale)
+    -- Save scale setting
+    RUI.DB.profile.widgets = RUI.DB.profile.widgets or {}
+    RUI.DB.profile.widgets[key] = RUI.DB.profile.widgets[key] or {}
+    RUI.DB.profile.widgets[key].scale = scale
     
-    local actionBarModule = moduleData.ActionBar.module
-    if actionBarModule and actionBarModule.UpdateWidgets then
-        actionBarModule:UpdateWidgets()
-    end
-end
-
-function Module:UpdateModuleScale(moduleKey, scale)
-    -- For unit frames, use the existing widget-based scale system
-    if moduleKey == "UnitFrame" then
-        local widgets = {"player", "target", "focus", "targetOfTarget", "pet"}
-        for _, widget in pairs(widgets) do
-            SaveUIFrameScale(tostring(scale), widget)
+    -- Apply scale directly to the appropriate frame without chat feedback
+    if key == "questTracker" then
+        if QuestMapFrame then
+            QuestMapFrame:SetScale(scale)
         end
-    elseif moduleKey == "CastingBar" then
-        -- Handle casting bar scale
-        if CastingBarFrame then
-            CastingBarFrame:SetScale(scale)
+    elseif key == "buffFrame" then
+        if BuffFrame then
+            BuffFrame:SetScale(scale)
         end
-    elseif moduleKey == "Minimap" then
-        -- Handle minimap scale - call SetScale on MinimapCluster
+    elseif key == "boss1Frame" then
+        if Boss1TargetFrame then
+            Boss1TargetFrame:SetScale(scale)
+        end
+    elseif key == "playerFrame" then
+        if PlayerFrame then
+            PlayerFrame:SetScale(scale)
+        end
+        -- Also update widget system
+        SaveUIFrameScale(tostring(scale), "player")
+    elseif key == "targetFrame" then
+        if TargetFrame then
+            TargetFrame:SetScale(scale)
+        end
+        SaveUIFrameScale(tostring(scale), "target")
+    elseif key == "totFrame" then
+        if TargetFrameToT then
+            TargetFrameToT:SetScale(scale)
+        end
+        SaveUIFrameScale(tostring(scale), "targetOfTarget")
+    elseif key == "petFrame" then
+        if PetFrame then
+            PetFrame:SetScale(scale)
+        end
+        SaveUIFrameScale(tostring(scale), "pet")
+    elseif key == "minimap" then
         if MinimapCluster then
             MinimapCluster:SetScale(scale)
         end
-        -- Also update widget system
-        local minimapModule = moduleData.Minimap.module
-        if minimapModule then
-            if RUI.DB.profile.widgets and RUI.DB.profile.widgets.minimap then
-                RUI.DB.profile.widgets.minimap.scale = scale
-            end
-            minimapModule:UpdateWidgets()
-        end
-    else
-        -- For other modules, store in module settings
-        RUI.DB.profile.modules = RUI.DB.profile.modules or {}
-        RUI.DB.profile.modules[moduleKey] = RUI.DB.profile.modules[moduleKey] or {}
-        RUI.DB.profile.modules[moduleKey].scale = scale
-        
-        local module = moduleData[moduleKey].module
-        if module and module.UpdateWidgets then
-            module:UpdateWidgets()
+    elseif string.find(key, "actionBar") or key == "microMenuBar" or key == "bagsBar" then
+        -- Handle action bars through widget system
+        local actionBarModule = RUI:GetModule("ActionBar")
+        if actionBarModule and actionBarModule.UpdateWidgets then
+            actionBarModule:UpdateWidgets()
         end
     end
 end
@@ -264,59 +257,37 @@ end
 function Module:LoadSavedSettings()
     if not optionsFrame then return end
     
-    RUI.DB.profile.modules = RUI.DB.profile.modules or {}
+    RUI.DB.profile.widgets = RUI.DB.profile.widgets or {}
     
-    -- Load module states and scales
-    for moduleKey, _ in pairs(moduleData) do
-        local moduleSettings = RUI.DB.profile.modules[moduleKey] or { enabled = true, scale = 1.0 }
-        
-        if optionsFrame.checkboxes[moduleKey] then
-            -- Check if module is actually enabled using AceAddon API
-            local module = RUI:GetModule(moduleKey, true)
-            local isEnabled = module and module:IsEnabled() or false
-            optionsFrame.checkboxes[moduleKey]:SetChecked(isEnabled)
-        end
-        
-        if optionsFrame.sliders[moduleKey] then
+    -- Load scale settings for all sliders
+    for i, sliderData in ipairs(scaleSliders) do
+        local slider = optionsFrame.sliders[sliderData.key]
+        if slider then
             local scale = 1.0
-            -- Get scale from appropriate source
-            if moduleKey == "UnitFrame" then
-                -- Use player frame scale as representative
-                scale = GetUIFrameScale("player") or 1.0
-            elseif moduleKey == "CastingBar" then
-                -- Get casting bar scale
-                if CastingBarFrame then
-                    scale = CastingBarFrame:GetScale() or 1.0
-                end
-            elseif moduleKey == "Minimap" then
-                -- Get minimap scale from MinimapCluster
-                if MinimapCluster then
-                    scale = MinimapCluster:GetScale() or 1.0
-                end
-            else
-                scale = moduleSettings.scale or 1.0
-            end
             
-            optionsFrame.sliders[moduleKey]:SetValue(scale)
-            local sliderText = getglobal(optionsFrame.sliders[moduleKey]:GetName() .. "Text")
-            if sliderText then
-                sliderText:SetText(moduleData[moduleKey].name .. " Scale: " .. string.format("%.1f", scale))
-            end
-        end
-    end
-    
-    -- Load action bar scales
-    if optionsFrame.actionBarSliders then
-        for barKey, slider in pairs(optionsFrame.actionBarSliders) do
-            local scale = 1.0
-            if RUI.DB.profile.widgets and RUI.DB.profile.widgets[barKey] then
-                scale = RUI.DB.profile.widgets[barKey].scale or 1.0
+            -- Get current scale from saved settings or live frame
+            if RUI.DB.profile.widgets[sliderData.key] then
+                scale = RUI.DB.profile.widgets[sliderData.key].scale or 1.0
+            elseif sliderData.key == "playerFrame" then
+                scale = GetUIFrameScale("player") or 1.0
+            elseif sliderData.key == "targetFrame" then
+                scale = GetUIFrameScale("target") or 1.0
+            elseif sliderData.key == "totFrame" then
+                scale = GetUIFrameScale("targetOfTarget") or 1.0
+            elseif sliderData.key == "petFrame" then
+                scale = GetUIFrameScale("pet") or 1.0
+            else
+                -- For other frames, try to get scale from actual frame
+                local frame = getglobal(sliderData.frameRef)
+                if frame and frame.GetScale then
+                    scale = frame:GetScale() or 1.0
+                end
             end
             
             slider:SetValue(scale)
             local sliderText = getglobal(slider:GetName() .. "Text")
             if sliderText then
-                sliderText:SetText(actionBarData[barKey].name .. " Scale: " .. string.format("%.1f", scale))
+                sliderText:SetText(sliderData.name .. ": " .. string.format("%.2f", scale))
             end
         end
     end
@@ -328,49 +299,30 @@ function Module:LoadSavedSettings()
 end
 
 function Module:ResetToDefaults()
-    -- Reset all modules to default
-    local UnitFrameModule    = RUI:GetModule("UnitFrame")
-    local CastingBarModule   = RUI:GetModule("CastingBar")
-    local ActionBarModule    = RUI:GetModule("ActionBar")
-    local MinimapModule      = RUI:GetModule("Minimap")
-    local QuestTrackerModule = RUI:GetModule("QuestTracker")
-    local BuffFrameModule    = RUI:GetModule("BuffFrame")
-
-    if ActionBarModule and ActionBarModule.LoadDefaultSettings then
-        ActionBarModule:LoadDefaultSettings()
-        ActionBarModule:UpdateWidgets()
+    -- Reset all scale sliders to 1.0
+    for i, sliderData in ipairs(scaleSliders) do
+        local slider = optionsFrame.sliders[sliderData.key]
+        if slider then
+            slider:SetValue(1.0)
+            -- Apply the reset scale
+            Module:UpdateFrameScale(sliderData.key, sliderData.frameRef, 1.0)
+        end
     end
-
-    if UnitFrameModule and UnitFrameModule.LoadDefaultSettings then
-        UnitFrameModule:LoadDefaultSettings()
-        UnitFrameModule:UpdateWidgets()
+    
+    -- Reset all modules to default via their LoadDefaultSettings
+    local modules = {"UnitFrame", "CastingBar", "ActionBar", "Minimap", "QuestTracker", "BuffFrame"}
+    for _, moduleName in pairs(modules) do
+        local module = RUI:GetModule(moduleName)
+        if module and module.LoadDefaultSettings then
+            module:LoadDefaultSettings()
+            if module.UpdateWidgets then
+                module:UpdateWidgets()
+            end
+        end
     end
-
-    if CastingBarModule and CastingBarModule.LoadDefaultSettings then
-        CastingBarModule:LoadDefaultSettings()
-        CastingBarModule:UpdateWidgets()
-    end
-
-    if MinimapModule and MinimapModule.LoadDefaultSettings then
-        MinimapModule:LoadDefaultSettings()
-        MinimapModule:UpdateWidgets()
-    end
-
-    if QuestTrackerModule and QuestTrackerModule.LoadDefaultSettings then
-        QuestTrackerModule:LoadDefaultSettings()
-        QuestTrackerModule:UpdateWidgets()
-    end
-
-    if BuffFrameModule and BuffFrameModule.LoadDefaultSettings then
-        BuffFrameModule:LoadDefaultSettings()
-        BuffFrameModule:UpdateWidgets()
-    end
-
-    -- Reset module states to defaults
-    RUI.DB.profile.modules = {}
-    for moduleKey, _ in pairs(moduleData) do
-        RUI.DB.profile.modules[moduleKey] = { enabled = true, scale = 1.0 }
-    end
+    
+    -- Reset widget scales
+    RUI.DB.profile.widgets = {}
     
     -- Reset snap to grid
     RUI.DB.profile.snapToGrid = false

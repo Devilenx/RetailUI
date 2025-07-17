@@ -10,10 +10,20 @@ RUI.optionsSlash = {
     order = 0,
     type = "group",
     args = {
+        -- Default action for `/rui` - open settings panel
+        default = {
+            name = "Open RetailUI Settings",
+            type = 'execute',
+            order = 0,
+            func = function()
+                InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
+            end,
+            dialogHidden = true
+        },
         edit = {
             name = "Enable Edit Mode",
             type = 'execute',
-            order = 0,
+            order = 1,
             func = function()
                 local EditorMode = RUI:GetModule('EditorMode')
                 if EditorMode:IsShown() then
@@ -27,7 +37,7 @@ RUI.optionsSlash = {
         options = {
             name = "Open Interface Options",
             type = 'execute',
-            order = 1,
+            order = 2,
             func = function()
                 InterfaceOptionsFrame_OpenToCategory("RetailUI Settings")
             end,
@@ -35,7 +45,7 @@ RUI.optionsSlash = {
         },
         scale = {
             name = "Scale",
-            order = 2,
+            order = 3,
             type = "group",
             args = {
                 player = {
@@ -97,7 +107,7 @@ RUI.optionsSlash = {
         default = {
             name = "Load Default Settings",
             type = 'execute',
-            order = 3,
+            order = 4,
             func = function()
                 local UnitFrameModule    = RUI:GetModule("UnitFrame")
                 local CastingBarModule   = RUI:GetModule("CastingBar")
