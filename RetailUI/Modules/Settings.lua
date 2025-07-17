@@ -103,19 +103,27 @@ function Module:CreateSettingsPanel()
     -- Add spacing before buttons
     yOffset = yOffset - 20
     
-    -- Create Reset to Default button
-    local resetButton = CreateFrame("Button", nil, scrollChild, "UIPanelButtonTemplate")
+    -- Create Reset to Default button (manual creation for WoW 3.3.5 compatibility)
+    local resetButton = CreateFrame("Button", nil, scrollChild)
     resetButton:SetSize(140, 24)
     resetButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 20, yOffset)
+    resetButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-Button-Up")
+    resetButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-Button-Down")
+    resetButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+    resetButton:SetNormalFontObject("GameFontNormal")
     resetButton:SetText("Reset to Default")
     resetButton:SetScript("OnClick", function()
         self:ResetToDefault()
     end)
     
-    -- Create Open Grid Layout button
-    local gridButton = CreateFrame("Button", nil, scrollChild, "UIPanelButtonTemplate")
+    -- Create Open Grid Layout button (manual creation for WoW 3.3.5 compatibility)
+    local gridButton = CreateFrame("Button", nil, scrollChild)
     gridButton:SetSize(140, 24)
     gridButton:SetPoint("LEFT", resetButton, "RIGHT", 10, 0)
+    gridButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-Button-Up")
+    gridButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-Button-Down")
+    gridButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+    gridButton:SetNormalFontObject("GameFontNormal")
     gridButton:SetText("Open Grid Layout")
     gridButton:SetScript("OnClick", function()
         self:OpenGridLayout()
@@ -168,7 +176,7 @@ function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
     slider:SetSize(200, 16)
     slider:SetMinMaxValues(0.5, 2.0)
     slider:SetValueStep(0.05)
-    slider:SetObeyStepOnDrag(true)
+    -- Note: SetObeyStepOnDrag doesn't exist in WoW 3.3.5
     
     -- Create slider textures manually since we're not using templates
     local thumb = slider:CreateTexture(nil, "OVERLAY")
@@ -176,15 +184,10 @@ function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
     thumb:SetSize(32, 32)
     slider:SetThumbTexture(thumb)
     
+    -- Simplified background for WoW 3.3.5 compatibility
     local bg = slider:CreateTexture(nil, "BACKGROUND")
     bg:SetTexture("Interface\\Buttons\\UI-SliderBar-Background")
     bg:SetAllPoints(slider)
-    slider:SetBackdrop({
-        bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
-        edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
-        tile = true, tileSize = 8, edgeSize = 8,
-        insets = { left = 3, right = 3, top = 6, bottom = 6 }
-    })
     
     -- Get current scale value or default to 1.0
     local currentScale = self:GetWidgetScale(widgetKey) or 1.0
