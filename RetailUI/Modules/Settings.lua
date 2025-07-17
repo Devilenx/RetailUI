@@ -55,15 +55,13 @@ function Module:CreateSettingsPanel()
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("RetailUI Settings")
     
-    -- Create scroll frame
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -20)
-    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -32, 16)
+    -- For WoW 3.3.5 compatibility, create a simple scrollable content frame instead of using templates
+    local contentFrame = CreateFrame("Frame", nil, panel)
+    contentFrame:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -20)
+    contentFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -16, 16)
     
-    -- Create scroll child
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetSize(1, 1) -- Will be resized later
-    scrollFrame:SetScrollChild(scrollChild)
+    -- Use the content frame directly for positioning elements
+    local scrollChild = contentFrame
     
     -- Variables for positioning
     local yOffset = -20
@@ -98,10 +96,22 @@ function Module:CreateSettingsPanel()
     
     yOffset = yOffset - 40
     
-    -- Create Snap to Grid checkbox
-    local snapCheckbox = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+    -- Create Snap to Grid checkbox (simplified for WoW 3.3.5 compatibility)
+    local snapCheckbox = CreateFrame("CheckButton", nil, scrollChild)
     snapCheckbox:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 20, yOffset)
-    snapCheckbox.Text:SetText("Snap to Grid")
+    snapCheckbox:SetSize(24, 24)
+    
+    -- Set up checkbox textures manually
+    snapCheckbox:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+    snapCheckbox:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+    snapCheckbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    snapCheckbox:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
+    
+    -- Create text label for checkbox
+    local snapLabel = snapCheckbox:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    snapLabel:SetPoint("LEFT", snapCheckbox, "RIGHT", 4, 0)
+    snapLabel:SetText("Snap to Grid")
+    
     snapCheckbox:SetScript("OnClick", function(self)
         Module.snapToGrid = self:GetChecked()
         
@@ -114,9 +124,6 @@ function Module:CreateSettingsPanel()
     
     yOffset = yOffset - 30
     
-    -- Set scroll child height
-    scrollChild:SetHeight(math.abs(yOffset) + 40)
-    
     self.settingsPanel = panel
     
     -- Register with Interface Options
@@ -128,13 +135,29 @@ function Module:CreateSettingsPanel()
 end
 
 function Module:CreateScaleSlider(parent, widgetKey, displayName, yOffset)
-    -- Create slider frame
-    local slider = CreateFrame("Slider", nil, parent, "OptionsSliderTemplate")
+    -- Create slider frame without template for WoW 3.3.5 compatibility
+    local slider = CreateFrame("Slider", nil, parent)
     slider:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, yOffset)
     slider:SetSize(200, 16)
     slider:SetMinMaxValues(0.5, 2.0)
     slider:SetValueStep(0.05)
     slider:SetObeyStepOnDrag(true)
+    
+    -- Create slider textures manually since we're not using templates
+    local thumb = slider:CreateTexture(nil, "OVERLAY")
+    thumb:SetTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+    thumb:SetSize(32, 32)
+    slider:SetThumbTexture(thumb)
+    
+    local bg = slider:CreateTexture(nil, "BACKGROUND")
+    bg:SetTexture("Interface\\Buttons\\UI-SliderBar-Background")
+    bg:SetAllPoints(slider)
+    slider:SetBackdrop({
+        bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
+        edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+        tile = true, tileSize = 8, edgeSize = 8,
+        insets = { left = 3, right = 3, top = 6, bottom = 6 }
+    })
     
     -- Get current scale value or default to 1.0
     local currentScale = self:GetWidgetScale(widgetKey) or 1.0
