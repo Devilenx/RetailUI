@@ -496,12 +496,16 @@ function Module:UNIT_SPELLCAST_NOT_INTERRUPTIBLE(unit)
 end
 
 function Module:LoadDefaultSettings()
-    RUI.DB.profile.widgets.playerCastingBar = { anchor = "BOTTOM", posX = 0, posY = 270 }
+    RUI.DB.profile.widgets.playerCastingBar = { anchor = "BOTTOM", posX = 0, posY = 270, scale = 1.0 }
 end
 
 function Module:UpdateWidgets()
     local widgetOptions = RUI.DB.profile.widgets.playerCastingBar
     self.playerCastingBar:SetPoint(widgetOptions.anchor, widgetOptions.posX, widgetOptions.posY)
+    
+    -- Apply scale to the actual CastingBarFrame
+    local scale = widgetOptions.scale or 1.0
+    CastingBarFrame:SetScale(scale)
 end
 
 function Module:ShowEditorTest()

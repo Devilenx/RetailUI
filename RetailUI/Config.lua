@@ -79,7 +79,16 @@ RUI.optionsSlash = {
                    type = 'input',
 				   order = 2,
                    set = function(info, input)
-						CastingBarFrame:SetScale(tonumber(input) or 1)
+						SaveUIFrameScale(input, "playerCastingBar")
+                    end,
+                    dialogHidden = true
+                },  
+                castbars = {
+                   name = "Cast Bars Scale (alias for castbar)",
+                   type = 'input',
+				   order = 3,
+                   set = function(info, input)
+						SaveUIFrameScale(input, "playerCastingBar")
                     end,
                     dialogHidden = true
                 },  
